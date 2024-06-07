@@ -25,11 +25,11 @@ stock_data['Return'] = stock_data['Close'].pct_change()
 stock_data['Log Return'] = np.log(stock_data['Close'] / stock_data['Close'].shift(1))
 
 #--------------------------------------
-from NEDL_MACD_Strategy import MACD
-strategy_signal = MACD(stock_data)
-
-#from TR_MACD import MACD
+#from NEDL_MACD_Strategy import MACD
 #strategy_signal = MACD(stock_data)
+
+from TR_MACD import MACD
+strategy_signal = MACD(stock_data)
 
 #--------------------------------------
 #generade trades

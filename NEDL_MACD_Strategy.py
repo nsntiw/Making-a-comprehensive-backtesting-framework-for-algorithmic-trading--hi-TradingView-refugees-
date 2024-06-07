@@ -7,13 +7,12 @@ def MACD(stock_data):
     short_ma_length = 5
     long_ma_length = 12
 
-    #calculate short and long moving averages
+    #calculate short and long simple moving averages
     short_ma = stock_data['Close'].rolling(short_ma_length).mean()
     long_ma = stock_data['Close'].rolling(long_ma_length).mean()
-    #simulating trading strategies
 
-    #1 if long, -1 if short
-    #short_bigger_than_long = np.where(short_ma > long_ma, 1, -1)
+    #generate strategy signal
+    #1 if short_ma > long_ma, -1 if short_ma < long_ma, 0 if long_ma is nan
     short_bigger_than_long = np.where(np.isnan(long_ma), 0, np.where(short_ma > long_ma, 1, -1))
     # 1 if long, -1 if short, 0 when it does not change
     MACD_signal = np.where(np.diff(short_bigger_than_long, prepend=0) != 0, short_bigger_than_long, 0)
