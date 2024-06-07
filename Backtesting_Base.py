@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 import yfinance as yf
-import matplotlib.pyplot as plt
 import math
 import plotting
 
@@ -123,7 +122,8 @@ print(f'MACD strategy Sharpe ratio vs BnH: {round(MACD_sharpe_ratio_VS_BnH, 2)}'
 
 #--------------------------------------
 #Plotting 1D histogram
-
+data = cumulative_return['Return']*100 
 default_bin_size = int(len(cumulative_return['Return'])**0.5)
-plotting.hist1d_base(cumulative_return['Return']*100, default_bin_size)
-plotting.hist1d_stdev_mu(cumulative_return['Return']*100, default_bin_size)
+
+plotting.hist1d_base(data, default_bin_size)
+plotting.hist1d_stdev_mu(data, default_bin_size)
