@@ -43,10 +43,12 @@ def hist1d_stdev_mu(data,bin):
     plt.axvline(x=mean, color='#d3212d', alpha=0.7, label = f'{mean}')
 
     # Normal distribution curve
+    bin_width = bins[1] - bins[0]
     xmin, xmax = plt.xlim()
     x = np.linspace(xmin, xmax, 100)
-    p = stats.norm.pdf(x, mean, stdev)
-    plt.plot(x, mean+p, label='Normal Distribution')
+    kde = stats.gaussian_kde(data[np.isfinite(data)]) #* len(data) * bin_width
+    p = kde(x)* len(data) * bin_width
+    plt.plot(x, p, 'k', linewidth=2, label='Normal Distribution')
 
 
     plt.xlabel('Values'), plt.ylabel('Frequency'), plt.title("Returns Histogram"), plt.legend(), plt.grid(True)
