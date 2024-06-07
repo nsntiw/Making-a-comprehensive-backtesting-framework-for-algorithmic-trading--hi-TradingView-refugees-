@@ -23,7 +23,7 @@ def MACD(stock_data):
     signal_bigger_than_macd = np.where(np.isnan(signal), 0, np.where(signal > macd, 1, -1))
 
     # 1 if long, -1 if short, 0 when it does not change
-    MACD_signal = np.where(np.diff(signal_bigger_than_macd, prepend=0) != 0, signal_bigger_than_macd, 0)
+    MACD_signal = np.where(np.diff(signal_bigger_than_macd, prepend=0) != 0 , signal_bigger_than_macd, 0)
     # Convert MACD_signal to a DataFrame with dates as indexes
     MACD_signal_df = pd.DataFrame(MACD_signal, index=stock_data.index, columns=['Signal'])
 
