@@ -13,8 +13,8 @@ def MACD(stock_data):
     #simulating trading strategies
 
     #1 if long, -1 if short
-    short_bigger_than_long = np.where(short_ma > long_ma, 1, -1)
-
+    #short_bigger_than_long = np.where(short_ma > long_ma, 1, -1)
+    short_bigger_than_long = np.where(np.isnan(long_ma), 0, np.where(short_ma > long_ma, 1, -1))
     # 1 if long, -1 if short, 0 when it does not change
     MACD_signal = np.where(np.diff(short_bigger_than_long, prepend=0) != 0, short_bigger_than_long, 0)
     # Convert MACD_signal to a DataFrame with dates as indexes

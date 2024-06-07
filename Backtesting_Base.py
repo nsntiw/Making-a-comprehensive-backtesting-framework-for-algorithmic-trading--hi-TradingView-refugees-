@@ -7,11 +7,13 @@ import math
 
 #--------------------------------------
 #download stock data
+#stock = []
+#stock_data = []
+
 stock = 'EURJPY=X'
-#stock = 'XOM'
+#stock.append('XOM')
 stock_data = yf.download(stock, '2016-01-01', '2021-03-17')
-print(f'Stock Date for {stock}:')
-print(stock_data)
+print(f'Stock Data for {stock}:'), print(stock_data)
 
 #--------------------------------------
 #specifying backtesting parameters
@@ -25,12 +27,26 @@ stock_data['Log Return'] = np.log(stock_data['Close'] / stock_data['Close'].shif
 #--------------------------------------
 from NEDL_MACD_Strategy import MACD
 strategy_signal = MACD(stock_data)
+
+#from TR_MACD import MACD
+#strategy_signal = MACD(stock_data)
+
 #--------------------------------------
 #generade trades
 long_trades = pd.DataFrame(columns=['Entry Date', 'Exit Date' , 'Buying Price', 'Selling Price', 'Return'])
 short_trades = pd.DataFrame(columns=['Entry Date', 'Exit Date', 'Selling Price', 'Buying Price', 'Return'])
 long = [[] for _ in range(4)] #'Entry Date', 'Exit Date' , 'Buying Price', 'Selling Price', 'Return'
 short = [[] for _ in range(4)]#'Entry Date', 'Exit Date', 'Selling Price', 'Buying Price', 'Return'
+
+#add data for day 0 such that the curves start at 1
+long[0].append(stock_data.index[0])
+long[1].append(stock_data['Close'].iloc[0])
+long[2].append(stock_data['Close'].iloc[0])
+long[3].append(stock_data.index[0])
+short[0].append(stock_data.index[0])
+short[1].append(stock_data['Close'].iloc[0])
+short[2].append(stock_data['Close'].iloc[0])
+short[3].append(stock_data.index[0])
 
 for i in range(len(strategy_signal)):
     if strategy_signal['Signal'].iloc[i] == 1:
@@ -55,7 +71,7 @@ for _ in range(len(short[0]) - len(short[3])):
 
 #Add trade data to dataframe
 long_trades = pd.DataFrame({
-    'Buying Price': long[2], 'Exit Date': long[3], 'Selling Price': long[1],
+    'Entry Date': long[0], 'Buying Price': long[2], 'Exit Date': long[3], 'Selling Price': long[1],
     'Return': [(sp - bp) / sp for sp, bp in zip(long[1], long[2])]
 })
 short_trades = pd.DataFrame({
@@ -65,6 +81,7 @@ short_trades = pd.DataFrame({
 #calculate cumulative returns
 cumulative_return = pd.concat([long_trades[['Exit Date', 'Return']], short_trades[['Exit Date', 'Return']]])
 cumulative_return = cumulative_return.rename(columns={'Exit Date': 'Date'})
+cumulative_return.sort_values('Date', inplace=True)
 # Print trades
 print("Long Trades:"), print(long_trades)
 print("Short Trades:"), print(short_trades)
@@ -78,10 +95,8 @@ plt.step(cumulative_return['Date'], np.cumprod(1+cumulative_return['Return']), l
 plt.step(long_trades['Exit Date'], np.cumprod(1+long_trades['Return']), label = 'Long')
 plt.step(short_trades['Exit Date'], np.cumprod(1+short_trades['Return']), label = 'Short')
 
-plt.title('Stock Price')
-plt.xlabel('Time (Trading days)')
-plt.ylabel('Price')
-plt.legend()
+plt.title('Stock Price'), plt.xlabel('Time (Trading days)'), plt.ylabel('Price'), plt.legend()
+plt.grid(True)
 plt.show()
 
 #--------------------------------------
@@ -105,7 +120,7 @@ risk_free_rate = 0.0211
 BnH_sharpe_ratio = (annualized_BnH_return - risk_free_rate) / annualized_BnH_risk
 MACD_sharpe_ratio = (annualized_MACD_retrn - risk_free_rate) / annualized_MACD_risk
 MACD_sharpe_ratio_VS_BnH = (annualized_MACD_retrn - annualized_BnH_return) / annualized_MACD_risk
-print(f'Buy-and-Hold strategy Sharpe ratio vs riskfree: {round(BnH_sharpe_ratio, 2)}')
+print(f'BnH strategy Sharpe ratio vs riskfree: {round(BnH_sharpe_ratio, 2)}')
 print(f'MACD strategy Sharpe ratio vs riskfree: {round(MACD_sharpe_ratio, 2)}')
 print(f'MACD strategy Sharpe ratio vs BnH: {round(MACD_sharpe_ratio_VS_BnH, 2)}')
 
@@ -118,10 +133,7 @@ print(f'MACD strategy Sharpe ratio vs BnH: {round(MACD_sharpe_ratio_VS_BnH, 2)}'
 default_bin_size = int(len(cumulative_return['Return'])**0.5)
 data = cumulative_return['Return']*100
 plt.hist(data, default_bin_size)
-plt.xlabel('Values')
-plt.ylabel('Frequency')
-plt.title("Returns Histogram")
-plt.grid(True)
+plt.xlabel('Values'), plt.ylabel('Frequency'), plt.title("Returns Histogram"), plt.grid(True)
 plt.show()
 
 #--------------------------------------
@@ -152,9 +164,5 @@ plt.axvline(x=mean+stdev, color='#2ca02c', alpha=0.7, label = f'{mean+stdev}')
 plt.axvline(x=mean-stdev, color='#2ca02c', alpha=0.7, label = f'{mean-stdev}')
 plt.axvline(x=mean, color='#d3212d', alpha=0.7, label = f'{mean}')
 
-plt.xlabel('Values')
-plt.ylabel('Frequency')
-plt.title("Returns Histogram")
-plt.legend()
-plt.grid(True)
+plt.xlabel('Values'), plt.ylabel('Frequency'), plt.title("Returns Histogram"), plt.legend(), plt.grid(True)
 plt.show()
