@@ -7,17 +7,22 @@ import plotting
 
 #--------------------------------------
 #download stock data
-#stock = []
-#stock_data = []
+import IO_handler
 
-stock = 'EURJPY=X'
-#stock.append('XOM')
-stock_data = yf.download(stock, '2002-07-01', '2024-02-05')
-print(f'Stock Data for {stock}:'), print(stock_data)
+#stock_name = 'EURJPY=X'
+#starting_date = '2002-07-01'
+#ending_date = '2024-02-05'
 
+stock_name = 'XOM'
+starting_date = '2015-12-30'
+ending_date = '2021-03-18'
+
+stock_data = IO_handler.get_stock_data(stock_name, starting_date, ending_date)
+print(f'Stock Data for {stock_name}:'), print(stock_data)
 #--------------------------------------
 #specifying backtesting parameters
 fee = 0.0005 #implement
+enable_short = True
 
 #--------------------------------------
 #stock percentage and log return array
@@ -25,39 +30,34 @@ stock_data['Return'] = stock_data['Close'].pct_change()
 stock_data['Log Return'] = np.log(stock_data['Close'] / stock_data['Close'].shift(1))
 
 #--------------------------------------
-#from NEDL_MACD_Strategy import MACD
-#strategy_signal = MACD(stock_data)
-
-from TR_MACD import MACD
+from NEDL_MACD_Strategy import MACD
 strategy_signal = MACD(stock_data)
+
+#from TR_MACD import MACD
+#strategy_signal = MACD(stock_data)
 
 #--------------------------------------
 #generade trades
 long_trades = pd.DataFrame(columns=['Entry Date', 'Exit Date' , 'Buying Price', 'Selling Price', 'Return'])
 short_trades = pd.DataFrame(columns=['Entry Date', 'Exit Date', 'Selling Price', 'Buying Price', 'Return'])
-long = [[] for _ in range(4)] #'Entry Date', 'Exit Date' , 'Buying Price', 'Selling Price', 'Return'
-short = [[] for _ in range(4)]#'Entry Date', 'Exit Date', 'Selling Price', 'Buying Price', 'Return'
 
 #add data for day 0 such that the curves start at 1
-long[0].append(stock_data.index[0])
-long[1].append(stock_data['Close'].iloc[0])
-long[2].append(stock_data['Close'].iloc[0])
-long[3].append(stock_data.index[0])
-short[0].append(stock_data.index[0])
-short[1].append(stock_data['Close'].iloc[0])
-short[2].append(stock_data['Close'].iloc[0])
-short[3].append(stock_data.index[0])
+#'Entry Date', 'Exit Date' , 'Buying Price', 'Selling Price', 'Return'
+long = [[stock_data.index[0]], [stock_data['Close'].iloc[0]], [stock_data['Close'].iloc[0]], [stock_data.index[0]]] 
+short = [[stock_data.index[0]], [stock_data['Close'].iloc[0]], [stock_data['Close'].iloc[0]], [stock_data.index[0]]] 
 
 for i in range(len(strategy_signal)):
     if strategy_signal['Signal'].iloc[i] == 1 and len(long[0]) == len(long[1]):
         long[0].append(stock_data.index[i])
         long[2].append(stock_data['Close'].iloc[i])
         if len(short[0]) > len(short[3]):
-            short[3].append(stock_data.index[i])
-            short[1].append(stock_data['Close'].iloc[i])
+            if enable_short:
+                short[3].append(stock_data.index[i])
+                short[1].append(stock_data['Close'].iloc[i])
     elif strategy_signal['Signal'].iloc[i] == -1 and len(short[0]) == len(short[1]):
-        short[0].append(stock_data.index[i])
-        short[2].append(stock_data['Close'].iloc[i])
+        if enable_short:
+            short[0].append(stock_data.index[i])
+            short[2].append(stock_data['Close'].iloc[i])
         if len(long[0]) > len(long[3]):
             long[3].append(stock_data.index[i])
             long[1].append(stock_data['Close'].iloc[i])
@@ -101,12 +101,12 @@ print((short_trades['Return'] > 0).sum()/len(short_trades))
 #calculate and print annualized return, risk, sharpe ratio
 #calculate return and risk
 annualized_BnH_return = np.prod(1+stock_data['Return'])**(252/len(stock_data)) - 1
-annualized_MACD_retrn = np.prod(1+cumulative_return['Return'])**(252/len(cumulative_return)) - 1
+annualized_MACD_retrn = np.prod(1+cumulative_return['Return'])**(252/len(stock_data)) - 1
 annualized_BnH_risk = np.std(stock_data['Return'])*(252)**(1/2)
 annualized_MACD_risk = np.std(cumulative_return['Return'])*(252)**(1/2)
 #print annualized return and risk
-print(f'buy-and-hold strategy return and risk: {round(annualized_BnH_return*100,2)}+% and {round(annualized_BnH_risk*100,2)}+%')
-print(f'MACD strategy return and risk: {round(annualized_MACD_retrn*100,2)}% and {round(annualized_MACD_risk*100,2)}%')
+print(f'buy-and-hold strategy return and risk: {round(annualized_BnH_return*100,2)}% and {round(annualized_BnH_risk*100,2)}%')
+print(f'MACD strategy return and risk: {round(annualized_MACD_retrn*100,2)}% and {round(annualized_MACD_risk*100,2)}%') 
 #calculate and plot annualized sharpe ratio
 risk_free_rate = 0.0211
 BnH_sharpe_ratio = (annualized_BnH_return - risk_free_rate) / annualized_BnH_risk

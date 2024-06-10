@@ -48,7 +48,7 @@ def hist1d_stdev_mu(data,bin):
     x = np.linspace(xmin, xmax, 100)
     kde = stats.gaussian_kde(data[np.isfinite(data)]) #* len(data) * bin_width
     p = kde(x)* len(data) * bin_width
-    plt.plot(x, p, 'k', linewidth=2, label='Normal Distribution')
+    plt.plot(x, p, 'k', linewidth=2, label='Probability Density Function')
 
 
     plt.xlabel('Values'), plt.ylabel('Frequency'), plt.title("Returns Histogram"), plt.legend(), plt.grid(True)

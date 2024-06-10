@@ -19,10 +19,12 @@ def MACD(stock_data):
     print(macd)
     print(signal)
     #generate strategy signal
+    #1 if short_ma > long_ma, -1 if short_ma < long_ma, 0 if long_ma is nan
+    short_bigger_than_long = np.where(np.isnan(signal), 0, np.where(macd > signal, 1, -1))
     #1 if signal > macd and signal < 0, -1 if signal < macd and signal > 0, 0 if signal is nan
-    signal_bigger_than_macd = np.where((macd > signal) & (macd < 0), 1, np.where((macd < signal) & (macd > 0), -1, 0))
+    signal = np.where((macd > signal) & (macd < 0), 1, np.where((macd < signal) & (macd > 0), -1, 0))
     # 1 if long, -1 if short, 0 when it does not change
-    MACD_signal = np.where(np.diff(signal_bigger_than_macd, prepend=0) != 0, signal_bigger_than_macd, 0)
+    MACD_signal = np.where(np.diff(signal, prepend=0) != 0, signal, 0)
     # Convert MACD_signal to a DataFrame with dates as indexes
     MACD_signal_df = pd.DataFrame(MACD_signal, index=stock_data.index, columns=['Signal'])
 
