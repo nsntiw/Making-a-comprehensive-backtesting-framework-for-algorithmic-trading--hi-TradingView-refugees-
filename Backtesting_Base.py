@@ -39,8 +39,8 @@ long_signal, short_signal = MACD(stock_data)
 
 #--------------------------------------
 #generade trades
-long_trades = pd.DataFrame(columns=['Entry Date', 'Exit Date' , 'Buying Price', 'Selling Price', 'Return'])
-short_trades = pd.DataFrame(columns=['Entry Date', 'Exit Date', 'Selling Price', 'Buying Price', 'Return'])
+long_trades = pd.DataFrame(columns=['Entry Date', 'Exit Date' , 'Entry Price', 'Exit Price', 'Return'])
+short_trades = pd.DataFrame(columns=['Entry Date', 'Exit Date', 'Entry Price', 'Exit Price', 'Return'])
 
 #add data for day 0 such that the curves start at 1
 #'Entry Date', 'Exit Date' , 'Buying Price', 'Selling Price', 'Return'
@@ -75,11 +75,11 @@ if enable_short:
 
 #Add trade data to dataframe
 long_trades = pd.DataFrame({
-    'Entry Date': long[0], 'Buying Price': long[2], 'Exit Date': long[3], 'Selling Price': long[1],
+    'Entry Date': long[0], 'Entry Price': long[2], 'Exit Date': long[3], 'Exit Price': long[1],
     'Return': [(sp - bp) / sp for sp, bp in zip(long[1], long[2])]
 })
 short_trades = pd.DataFrame({
-    'Entry Date': short[0], 'Selling Price': short[2], 'Exit Date': short[3], 'Buying Price': short[1],
+    'Entry Date': short[0], 'Entry Price': short[2], 'Exit Date': short[3], 'Exit Price': short[1],
     'Return': [(sp - bp) / sp for sp, bp in zip(short[2], short[1])]
 })
 #calculate cumulative returns

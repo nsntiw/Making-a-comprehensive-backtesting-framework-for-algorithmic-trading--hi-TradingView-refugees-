@@ -16,7 +16,7 @@ def MACD(stock_data):
     macd_line = fast_ema - slow_ema
     signal_line = macd_line.ewm(span=signal_length, adjust=False, min_periods = signal_length).mean()
 
-    #generate strategy signal
+    #generate raw strategy values
     #1 if macd > signal and signal < 0, 0 if signal is nan or when it does not change
     MACD_long_entry_raw = np.where((macd_line > signal_line) & (signal_line < 0), 1, 0)
     #-1 if macd < signal
@@ -28,13 +28,11 @@ def MACD(stock_data):
     MACD_short_exit_raw = np.where((macd_line > signal_line), -1, 0)
     MACD_short_raw = MACD_short_entry_raw + MACD_short_exit_raw
 
-    #convert to signal
+    #convert to strategy signal
     MACD_long_signal = np.where(np.diff(MACD_long_raw, prepend=0) != 0, MACD_long_raw, 0)
     MACD_short_signal = np.where(np.diff(MACD_short_raw, prepend=0) != 0, MACD_short_raw, 0)
 
-    print(MACD_long_signal)
-    # 1 if long, -1 if short, 0 when it does not change
-    # Convert MACD_signal to a DataFrame with dates as indexes
+    # Convert signal to a DataFrame with dates as indexes
     MACD_long_signal_df = pd.DataFrame(MACD_long_signal, index=stock_data.index, columns=['Signal'])
     MACD_short_signal_df = pd.DataFrame(MACD_short_signal, index=stock_data.index, columns=['Signal'])
 
