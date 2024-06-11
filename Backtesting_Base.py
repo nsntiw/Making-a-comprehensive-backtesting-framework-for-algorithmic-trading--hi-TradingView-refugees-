@@ -9,9 +9,11 @@ import math
 def num_current_trades(df):
     return df['Exit Date'].isnull().sum()
 
-def calc_returns(entry_price, exit_price):
-    return (exit_price - entry_price) / entry_price
-
+def calc_returns(entry_price, exit_price, long):
+    if long:
+        return (exit_price - entry_price) / entry_price
+    else:
+        return (entry_price - exit_price) / entry_price
 #--------------------------------------
 #download stock data
 import IO_handler
@@ -69,29 +71,34 @@ short_trades = pd.DataFrame({'Entry Date': initial_date, 'Exit Date': initial_da
                              'Entry Price': initial_price, 'Exit Price': initial_price, 
                              'Return': 0}, index=[0])
 
-for i in range(len(stock_data)):
+for i in range(1, len(stock_data) + 1):
+    data = stock_data.iloc[:i]
     if enable_long:
-        if(strategy_long(i, stock_data) == -1 and num_current_trades(long_trades) == 1):
+        #exit trade
+        if(strategy_long(data) == -1 and num_current_trades(long_trades) == 1):
             exit_index = long_trades[long_trades['Exit Date'].isnull()].index[0]
-            long_trades.at[exit_index, 'Exit Date'] = stock_data.index[i]
-            long_trades.at[exit_index, 'Exit Price'] = stock_data['Close'].iloc[i]
-            long_trades.at[exit_index, 'Return'] = calc_returns(long_trades.at[exit_index, 'Entry Price'], long_trades.at[exit_index, 'Exit Price'])
-        if(strategy_long(i, stock_data) == 1 and num_current_trades(long_trades) + num_current_trades(short_trades) == 0):
+            long_trades.at[exit_index, 'Exit Date'] = data.index[-1]
+            long_trades.at[exit_index, 'Exit Price'] = data['Close'].iloc[-1]
+            long_trades.at[exit_index, 'Return'] = calc_returns(long_trades.at[exit_index, 'Entry Price'], long_trades.at[exit_index, 'Exit Price'], True)
+        #enter trade
+        if(strategy_long(data) == 1 and num_current_trades(long_trades) + num_current_trades(short_trades) == 0):
             new_row = pd.DataFrame({
-                'Entry Date': [stock_data.index[i]], 
-                'Entry Price': [stock_data['Close'].iloc[i]]
+                'Entry Date': [data.index[-1]], 
+                'Entry Price': [data['Close'].iloc[-1]]
             })
             long_trades = pd.concat([long_trades, new_row], ignore_index=True)
     if enable_short:
-        if(strategy_short(i, stock_data) == -1 and num_current_trades(short_trades) == 1):
+        #exit trade
+        if(strategy_short(data) == -1 and num_current_trades(short_trades) == 1):
             exit_index = short_trades[short_trades['Exit Date'].isnull()].index[0]
-            short_trades.at[exit_index, 'Exit Date'] = stock_data.index[i]
-            short_trades.at[exit_index, 'Exit Price'] = stock_data['Close'].iloc[i]
-            short_trades.at[exit_index, 'Return'] = calc_returns(short_trades.at[exit_index, 'Entry Price'], short_trades.at[exit_index, 'Exit Price'])
-        if(strategy_short(i, stock_data) == 1 and num_current_trades(short_trades) + num_current_trades(short_trades) == 0):
+            short_trades.at[exit_index, 'Exit Date'] = data.index[-1]
+            short_trades.at[exit_index, 'Exit Price'] = data['Close'].iloc[-1]
+            short_trades.at[exit_index, 'Return'] = calc_returns(short_trades.at[exit_index, 'Entry Price'], short_trades.at[exit_index, 'Exit Price'], False)
+        #enter trade
+        if(strategy_short(data) == 1 and num_current_trades(short_trades) + num_current_trades(short_trades) == 0):
             new_row = pd.DataFrame({
-                'Entry Date': [stock_data.index[i]], 
-                'Entry Price': [stock_data['Close'].iloc[i]]
+                'Entry Date': [data.index[-1]], 
+                'Entry Price': [data['Close'].iloc[-1]]
             })
             short_trades = pd.concat([short_trades, new_row], ignore_index=True)
 
@@ -99,6 +106,8 @@ for i in range(len(stock_data)):
 cumulative_return = pd.concat([long_trades[['Exit Date', 'Return']], short_trades[['Exit Date', 'Return']]])
 cumulative_return = cumulative_return.rename(columns={'Exit Date': 'Date'})
 cumulative_return.sort_values('Date', inplace=True)
+#make the index sequential
+cumulative_return.reset_index(drop=True, inplace=True)
 # Print trades
 print("Long Trades:"), print(long_trades)
 print("Short Trades:"), print(short_trades)
