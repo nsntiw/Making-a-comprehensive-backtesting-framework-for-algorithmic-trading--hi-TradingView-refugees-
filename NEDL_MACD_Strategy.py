@@ -20,3 +20,29 @@ def MACD(stock_data):
     MACD_signal_df = pd.DataFrame(MACD_signal, index=stock_data.index, columns=['Signal'])
 
     return(MACD_signal_df)
+
+def MACD_long(i, stock_data):
+    #MACD parameters
+    short_ma_length = 5
+    long_ma_length = 1
+    #calculate short and long simple moving averages
+    short_ma = stock_data['Close'][i-short_ma_length+1:i+1].mean()
+    long_ma = stock_data['Close'][i-long_ma_length+1:i+1].mean()
+    
+    if short_ma > long_ma:
+        return 1
+    else:
+        return -1
+
+def MACD_short(i, stock_data):
+    #MACD parameters
+    short_ma_length = 5
+    long_ma_length = 1
+    #calculate short and long simple moving averages
+    short_ma = stock_data['Close'][i-short_ma_length+1:i+1].mean()
+    long_ma = stock_data['Close'][i-long_ma_length+1:i+1].mean()
+
+    if short_ma < long_ma:
+        return 1
+    else:
+        return -1
