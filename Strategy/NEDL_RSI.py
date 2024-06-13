@@ -8,8 +8,10 @@ def RSI_long(data_feed):
     rsi_oversold = 30
     rsi_overbought = 70
     #calculate RSI
-    up = np.maximum(data_feed['Close'].diff(),0)
-    down = np.maximum(-data_feed['Close'].diff(),0)
+    #Get latest 15 values for RSI instead of the whole array
+    close_prices = data_feed['Close'].tail(rsi_period + 1)
+    up = np.maximum(close_prices.diff(), 0)
+    down = np.maximum(-close_prices.diff(), 0)
     rs = up[-rsi_period:].mean() / down[-rsi_period:].mean()
     rsi = 100 - 100/(1 + rs)
     #return signal
@@ -26,8 +28,10 @@ def RSI_short(data_feed):
     rsi_oversold = 30
     rsi_overbought = 70
     #calculate RSI
-    up = np.maximum(data_feed['Close'].diff(),0)
-    down = np.maximum(-data_feed['Close'].diff(),0)
+    #Get latest 15 values for RSI instead of the whole array
+    close_prices = data_feed['Close'].tail(rsi_period + 1)
+    up = np.maximum(close_prices.diff(), 0)
+    down = np.maximum(-close_prices.diff(), 0)
     rs = up[-rsi_period:].mean() / down[-rsi_period:].mean()
     rsi = 100 - 100/(1 + rs)
     #return signal

@@ -6,13 +6,13 @@ pd.options.display.float_format = "{:,.2f}".format
 #--------------------------------------
 #Download or read downloaded stock data csv files
 #NEDL_MACD
-stock_name = 'XOM'
-starting_date = '2016-01-01'
-ending_date = '2021-03-18'
-#NEDL_RSI
-#stock_name = 'KO'
+#stock_name = 'XOM'
 #starting_date = '2016-01-01'
-#ending_date = '2021-03-21'
+#ending_date = '2021-03-18'
+#NEDL_RSI
+stock_name = 'KO'
+starting_date = '2016-01-01'
+ending_date = '2021-03-21'
 #TR_MACD
 #stock_name = 'EURJPY=X'
 #starting_date = '2002-07-01'
@@ -38,11 +38,10 @@ stock_data['Log Return'] = np.log(stock_data['Close'] / stock_data['Close'].shif
 stock_data['Cumulative % Return'] = np.cumprod(1+stock_data['% Return'])
 print(f'Stock Data for {stock_name}:'), print(stock_data)
 #--------------------------------------
-from Strategy.NEDL_MACD import MACD_long,MACD_short
-strategy_long, strategy_short = MACD_long, MACD_short
-#from Strategy.NEDL_RSI import RSI_long, RSI_short
-#strategy_long = RSI_long
-#strategy_short = RSI_short
+#from Strategy.NEDL_MACD import MACD_long,MACD_short
+#strategy_long, strategy_short = MACD_long, MACD_short
+from Strategy.NEDL_RSI import RSI_long, RSI_short
+strategy_long, strategy_short = RSI_long, RSI_short
 #form Strategy.TR_MACD import MACD_long, MACD_short
 #long_signal, short_signal = MACD(stock_data)
 #from Strategy.CriticalTrading_Breakout import Breakout
