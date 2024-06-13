@@ -129,7 +129,7 @@ def print_TV_stats(stock, cumulative, long, short):
     table.append(["Avg # Bars in Winning Trades"])
     table.append(["Avg # Bars in Losing Trades"])
     table.append(["Margin Calls"])
-    print(tabulate(table))
+    print(tabulate(table, headers = ['Stats','Cumulative','Long','Short'], tablefmt="simple_grid"))
 
 def equity_curve(stock_data, cumulative_return, long_trades, short_trades):
     #visualizing equity curve (percentage)
