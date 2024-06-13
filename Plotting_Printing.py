@@ -18,8 +18,6 @@ def print_TV_stats(stock, cumulative, long, short):
     #max run-up
     #max drawdown
     BnH_Return = (stock['Cumulative % Return'].iloc[-1] - 1) * 100
-
-    #Additional stats
     #Annualized percentage return and risk
     A_BnH_Return = ((1 + BnH_Return / 100) ** (252 / len(stock)) - 1) * 100
     A_BnH_Risk = stock['% Return'].std() * (252)**(1/2) * 100
@@ -36,7 +34,6 @@ def print_TV_stats(stock, cumulative, long, short):
     A_L_SR = (A_L_Return / 100 - risk_free_rate) / (A_L_Risk / 100)
     A_S_SR = (A_S_Return / 100 - risk_free_rate) / (A_S_Risk / 100)
     A_C_vs_BnH_SR = (A_C_Return / 100 - A_BnH_Return / 100) / A_C_Risk / 100
-
     #sortino ratio
 
     C_PF = C_GP / abs(C_GL)
