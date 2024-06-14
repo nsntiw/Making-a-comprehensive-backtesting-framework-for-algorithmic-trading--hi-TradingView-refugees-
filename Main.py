@@ -70,26 +70,6 @@ short_non_nan = short_trades.dropna(subset=['Cumulative Return'])
 cumulative_non_nan = cumulative_return.dropna(subset=['Cumulative Return'])
 Plotting_Printing.equity_curve(stock_data, cumulative_non_nan, long_non_nan, short_non_nan)
 
-
-#--------------------------------------
-#Calculate and print annualized return, risk, sharpe ratio
-#Calculate return and risk
-annualized_BnH_return = stock_data['Cumulative % Return'].iloc[-1] **(252/len(stock_data)) - 1
-annualized_algo_retrn = cumulative_return['Cumulative Return'].dropna().iloc[-1] **(252/len(stock_data)) - 1
-annualized_BnH_risk = np.std(stock_data['% Return'])*(252)**(1/2)
-annualized_algo_risk = np.std(cumulative_return['Return'])*(252)**(1/2)
-#print annualized return and risk
-print(f'BnH strategy return and risk: {round(annualized_BnH_return*100,2)}% and {round(annualized_BnH_risk*100,2)}%')
-print(f'Algo strategy return and risk: {round(annualized_algo_retrn*100,2)}% and {round(annualized_algo_risk*100,2)}%') 
-#calculate and plot annualized sharpe ratio
-risk_free_rate = 0.0211
-BnH_sharpe_ratio = (annualized_BnH_return - risk_free_rate) / annualized_BnH_risk
-algo_sharpe_ratio = (annualized_algo_retrn - risk_free_rate) / annualized_algo_risk
-algo_sharpe_ratio_VS_BnH = (annualized_algo_retrn - annualized_BnH_return) / annualized_algo_risk
-print(f'BnH strategy Sharpe ratio vs riskfree: {round(BnH_sharpe_ratio, 2)}')
-print(f'Algo strategy Sharpe ratio vs riskfree: {round(algo_sharpe_ratio, 2)}')
-print(f'Algo strategy Sharpe ratio vs BnH: {round(algo_sharpe_ratio_VS_BnH, 2)}')
-
 #--------------------------------------
 #Plotting 1D histogram
 data = cumulative_return['Return'].dropna()*100 
