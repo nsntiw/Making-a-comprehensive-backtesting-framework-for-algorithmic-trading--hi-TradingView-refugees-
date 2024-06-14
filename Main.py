@@ -33,10 +33,12 @@ pyramiding_num_trades = 0
 #--------------------------------------
 #Calculate stock percentage and log returns
 stock_data['% Return'] = stock_data['Close'].pct_change()
-#Overestimates negative returns and underestimates positive returns
+#Log returns overestimates negative returns and underestimates positive returns
 stock_data['Log Return'] = np.log(stock_data['Close'] / stock_data['Close'].shift(1))
 stock_data['Cumulative % Return'] = np.cumprod(1+stock_data['% Return'])
-print(f'Stock Data for {stock_name}:'), print(stock_data)
+
+import Plotting_Printing
+print(f'Stock Data for {stock_name}:'), Plotting_Printing.print_df(stock_data)
 #--------------------------------------
 #from Strategy.NEDL_MACD import MACD_long,MACD_short
 #strategy_long, strategy_short = MACD_long, MACD_short
@@ -53,9 +55,9 @@ import Backtesting
 long_trades, short_trades, cumulative_return = Backtesting.generate_trades(stock_data, strategy_long, strategy_short, enable_long, enable_short)
 
 #Print trades list
-print("Long Trades:"), print(long_trades)
-print("Short Trades:"), print(short_trades)
-print("Cumulative:"), print(cumulative_return)
+print("Long Trades:"), Plotting_Printing.print_df(long_trades)
+print("Short Trades:"), Plotting_Printing.print_df(short_trades)
+print("Cumulative:"), Plotting_Printing.print_df(cumulative_return)
 
 #styler = long_trades.style.background_gradient()
 #styler

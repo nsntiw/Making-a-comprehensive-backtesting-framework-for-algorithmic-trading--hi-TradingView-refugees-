@@ -4,6 +4,27 @@ from matplotlib import colors
 import numpy as np
 import pandas as pd
 from scipy import stats
+from math import floor, log10
+
+
+def format_df_value(x):
+    if isinstance(x, (int, float)):
+        if abs(x) >= 1e6:
+            return f'{x:.2e}' #Scientific notation with two decimal places for large numbers
+        else:
+            return f'{x:.2f}' #2 decimal places
+    elif isinstance(x, pd.Timestamp):
+        return x.strftime('%Y-%m-%d') #Format datetime objects to YYYY-MM-DD
+    return str(x)  # Return as string for non-numeric and non-datetime values
+
+
+def print_df(df):
+    #2 decimal places
+    formatted_df = df.map(format_df_value)
+    #For dataframes with dates as indexes
+    if isinstance(df.index, pd.DatetimeIndex):
+        formatted_df.index = df.index.strftime('%Y-%m-%d')
+    print(tabulate(formatted_df, headers = df.columns.tolist(), tablefmt="github"))
 
 def print_TV_stats(stock, cumulative, long, short):
     C_NP = (cumulative['Cumulative Return'].dropna().iloc[-1] - 1) * 100
