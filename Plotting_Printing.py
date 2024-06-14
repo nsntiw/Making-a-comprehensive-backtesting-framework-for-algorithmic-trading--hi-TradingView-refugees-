@@ -4,8 +4,6 @@ from matplotlib import colors
 import numpy as np
 import pandas as pd
 from scipy import stats
-from math import floor, log10
-
 
 def format_df_value(x):
     if isinstance(x, (int, float)):
@@ -17,19 +15,18 @@ def format_df_value(x):
         return x.strftime('%Y-%m-%d') #Format datetime objects to YYYY-MM-DD
     return str(x)  # Return as string for non-numeric and non-datetime values
 
-
 def print_df(df):
     #2 decimal places
     formatted_df = df.map(format_df_value)
     #For dataframes with dates as indexes
     if isinstance(df.index, pd.DatetimeIndex):
         formatted_df.index = df.index.strftime('%Y-%m-%d')
-    print(tabulate(formatted_df, headers = df.columns.tolist(), tablefmt="github"))
+    print(tabulate(formatted_df, headers = df.columns.tolist(), tablefmt="github", numalign="right", stralign="right"))
 
-def print_TV_stats(stock, cumulative, long, short):
-    C_NP = (cumulative['Cumulative Return'].dropna().iloc[-1] - 1) * 100
-    L_NP = (long['Cumulative Return'].dropna().iloc[-1] - 1) * 100
-    S_NP = (short['Cumulative Return'].dropna().iloc[-1] - 1) * 100
+def print_TV_stats(stock, cumulative, long, short): #No longer passing in cumulative, long, short with slice indexing to get rid of initial trade
+    C_NP = (cumulative['Total Return'].dropna().iloc[-1] - 1) * 100
+    L_NP = (long['Total Return'].dropna().iloc[-1] - 1) * 100
+    S_NP = (short['Total Return'].dropna().iloc[-1] - 1) * 100
     C_GP = cumulative[cumulative['Return'] > 0]['Return'].sum() * 100
     L_GP = long[long['Return'] > 0]['Return'].sum() * 100
     S_GP = short[short['Return'] > 0]['Return'].sum() * 100
@@ -38,7 +35,7 @@ def print_TV_stats(stock, cumulative, long, short):
     S_GL = short[short['Return'] < 0]['Return'].sum() * 100
     #max run-up
     #max drawdown
-    BnH_Return = (stock['Cumulative % Return'].iloc[-1] - 1) * 100
+    BnH_Return = (stock['Total % Return'].iloc[-1] - 1) * 100
     #Annualized percentage return and risk
     A_BnH_Return = ((1 + BnH_Return / 100) ** (252 / len(stock)) - 1) * 100
     A_BnH_Risk = stock['% Return'].std() * (252)**(1/2) * 100
@@ -121,10 +118,10 @@ def print_TV_stats(stock, cumulative, long, short):
     #table.append(["BnH Return",f'{BnH_Return:.2f}%'])
     #table.append(["Sharpe Ratio",C_SR,L_SR,S_SR])
     #Additional stats
-    table.append(["BnH Annulized Return, Risk",f'{A_BnH_Return:.2f}%, {A_BnH_Risk:.2f}%'])
-    table.append(["BnH Annulized Sharpe Ratio",f'{A_BnH_SR:.2f}'])
-    table.append(["Algo Annulized Return, Risk",f'{A_C_Return:.2f}%, {A_C_Risk:.2f}%',f'{A_L_Return:.2f}%, {A_L_Risk:.2f}%',f'{A_S_Return:.2f}%, {A_S_Risk:.2f}%'])
-    table.append(["Algo Annulized Sharpe Ratio", f'{A_C_SR:.2f}',f'{A_L_SR:.2f}',f'{A_S_SR:.2f}'])
+    table.append(["BnH Annualized Return, Risk",f'{A_BnH_Return:.2f}%, {A_BnH_Risk:.2f}%'])
+    table.append(["BnH Annualized Sharpe Ratio",f'{A_BnH_SR:.2f}'])
+    table.append(["Algo Annualized Return, Risk",f'{A_C_Return:.2f}%, {A_C_Risk:.2f}%',f'{A_L_Return:.2f}%, {A_L_Risk:.2f}%',f'{A_S_Return:.2f}%, {A_S_Risk:.2f}%'])
+    table.append(["Algo Annualized Sharpe Ratio", f'{A_C_SR:.2f}',f'{A_L_SR:.2f}',f'{A_S_SR:.2f}'])
     
     #------------------------
     table.append(["Sortino Ratio"])
@@ -151,11 +148,11 @@ def print_TV_stats(stock, cumulative, long, short):
 
 def equity_curve(stock_data, cumulative_return, long_trades, short_trades):
     #visualizing equity curve (percentage)
-    plt.plot(stock_data.index, stock_data['Cumulative % Return'], label = 'Buy and Hold')
+    plt.plot(stock_data.index, stock_data['Total % Return'], label = 'Buy and Hold')
     #Use step because plt.plot will draw a straight line between datapoints that exists
-    plt.step(cumulative_return['Date'], cumulative_return['Cumulative Return'], label = "Cumulative")
-    plt.step(long_trades['Exit Date'], long_trades['Cumulative Return'], label = 'Long')
-    plt.step(short_trades['Exit Date'], short_trades['Cumulative Return'], label = 'Short')
+    plt.step(cumulative_return['Date'], cumulative_return['Total Return'], label = "Total")
+    plt.step(long_trades['Exit Date'], long_trades['Total Return'], label = 'Long')
+    plt.step(short_trades['Exit Date'], short_trades['Total Return'], label = 'Short')
 
     plt.title('Stock Price'), plt.xlabel('Time (Trading days)'), plt.ylabel('Price'), plt.legend()
     plt.grid(True)
