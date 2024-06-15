@@ -21,7 +21,7 @@ def RSI(data_feed, rsi_period):
     return rsi
 
 def MACD(data_feed, short_ma_length, long_ma_length, signal_length): 
-    close_prices = data_feed['Close'].tail(long_ma_length + signal_length)#works
+    close_prices = data_feed.tail(long_ma_length + signal_length)#works
     #Calculate short and long simple moving averages
     short_ema = close_prices.ewm(span=short_ma_length, adjust=False, min_periods = short_ma_length).mean()
     long_ema = close_prices.ewm(span=long_ma_length, adjust=False, min_periods = long_ma_length).mean()

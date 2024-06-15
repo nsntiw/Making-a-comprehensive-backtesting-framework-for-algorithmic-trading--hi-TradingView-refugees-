@@ -5,6 +5,7 @@ pd.options.display.float_format = "{:,.2f}".format
 import IO_handler
 import Plotting_Printing
 import Backtesting
+import math
 
 #--------------------------------------
 #Download or read downloaded stock data csv files
@@ -46,7 +47,7 @@ print(f'Stock Data for {stock_name}:'), Plotting_Printing.print_df(stock_data)
 #strategy_long, strategy_short = MACD_long, MACD_short
 #from Strategy.NEDL_RSI import RSI_long, RSI_short
 #strategy_long, strategy_short = RSI_long, RSI_short
-from Strategy.TR_MACD import MACD_long, MACD_short
+from Strategy.TR_MACD_high_low import MACD_long, MACD_short
 strategy_long, strategy_short = MACD_long, MACD_short
 #from Strategy.CriticalTrading_Breakout import Breakout
 #long_signal, short_signal = Breakout(stock_data)
@@ -72,7 +73,6 @@ Plotting_Printing.equity_curve(stock_data, cumulative_non_nan, long_non_nan, sho
 
 #--------------------------------------
 #Plotting 1D histogram
-import math
 data = cumulative_return['Return'].dropna() * 100
 
 #Sturges' Formula, assumes normal distribution 
@@ -86,4 +86,11 @@ bin_size = int(len(cumulative_return['Return']) ** 0.5) * 2
 #bin_size = int((max(data) - min(data)) / bin_width)
 
 #Plotting_Printing.hist1d_base(data, default_bin_size)
-Plotting_Printing.hist1d_stdev_mu(data, bin_size)
+Plotting_Printing.hist1d_stdev_mu(data[2:], bin_size)
+
+long_trades['Length'] = (long_trades['Exit Date'] - long_trades['Entry Date']).dt.days
+short_trades['Length'] = (short_trades['Exit Date'] - short_trades['Entry Date']).dt.days
+cumulative_return = pd.concat([long_trades[['Length']], short_trades[['Length']]])
+data1 = cumulative_return['Length']
+
+Plotting_Printing.hist2d_base(data, data1, bin_size)

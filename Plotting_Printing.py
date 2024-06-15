@@ -68,9 +68,9 @@ def print_TV_stats(stock, cumulative, long, short): #No longer passing in cumula
         open_pl += (short['Entry Price'].iloc[-1] - stock['Close'].iloc[-1]) / short['Entry Price'].iloc[-1]
         S_TOT += 1
     C_TOT = L_TOT + S_TOT
-    C_TCT = len(cumulative) - C_TOT 
-    L_TCT = len(long) - L_TOT
-    S_TCT = len(short) - S_TOT
+    C_TCT = len(cumulative) - C_TOT - 2
+    L_TCT = len(long) - L_TOT - 1
+    S_TCT = len(short) - S_TOT - 1
     C_AT = C_NP / C_TCT 
     L_AT = L_NP / L_TCT
     S_AT = S_NP / S_TCT
@@ -193,4 +193,8 @@ def hist1d_stdev_mu(data,bin):
 
 
     plt.xlabel('Values'), plt.ylabel('Frequency'), plt.title("Returns Histogram"), plt.legend(), plt.grid(True)
+    plt.show()
+
+def hist2d_base(data, data1, bin):
+    plt.hist2d(data, data1, bin)
     plt.show()
