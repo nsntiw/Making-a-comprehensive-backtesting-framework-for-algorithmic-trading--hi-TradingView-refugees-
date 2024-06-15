@@ -78,7 +78,7 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
                         calc_drawdown(data_feed, long_trades, True)
                     ]
             #Enter trade
-            elif(long_signal == 1 and num_open_trades(long_trades) + num_open_trades(short_trades) == 0):
+            elif(long_signal == 1 and num_open_trades(short_trades) == 0):
                 new_row = pd.DataFrame({
                     'Entry Date': [data_feed.index[-1]], 
                     'Entry Price': [data_feed['Close'].iloc[-1]]
@@ -101,7 +101,7 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
                         calc_drawdown(data_feed, short_trades, False)
                     ]
             #Enter trade
-            elif(short_signal == 1 and num_open_trades(short_trades) + num_open_trades(long_trades) == 0):
+            elif(short_signal == 1 and num_open_trades(long_trades) == 0):
                 new_row = pd.DataFrame({
                     'Entry Date': [data_feed.index[-1]], 
                     'Entry Price': [close]
