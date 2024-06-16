@@ -47,10 +47,10 @@ print(f'Stock Data for {stock_name}:'), Plotting_Printing.print_df(stock_data)
 #strategy_long, strategy_short = MACD_long, MACD_short
 #from Strategy.NEDL_RSI import RSI_long, RSI_short
 #strategy_long, strategy_short = RSI_long, RSI_short
-from Strategy.TR_MACD_high_low import MACD_long, MACD_short
-strategy_long, strategy_short = MACD_long, MACD_short
-#from Strategy.CriticalTrading_Breakout import Breakout_long, Breakout_short
-#strategy_long, strategy_short = Breakout_long, Breakout_short
+#from Strategy.TR_MACD_high_low import MACD_long, MACD_short
+#strategy_long, strategy_short = MACD_long, MACD_short
+from Strategy.CriticalTrading_Breakout import Breakout_long, Breakout_short
+strategy_long, strategy_short = Breakout_long, Breakout_short
 
 #--------------------------------------
 #Generate trades
