@@ -1,14 +1,14 @@
 #https://youtu.be/_9Bmxylp63Y?si=LsMSMCmxBuaVE3sd
 import numpy as np
 import pandas as pd
-from Strategy.Library import ATR
+from Strategy.Library import SMA, ATR, high, low
 
 def Breakout(stock_data):
     #Breakout parameters
     SMA_length = 200
     ATR_length = 20
 
-    #calculate ATR stop loss size, seven day low, seven day high, 200 day sma
+    #Calculate ATR stop loss size, seven day low, seven day high, 200 day sma
     close = stock_data['Close']
 
     moving_average_filter = stock_data['Close'].rolling(SMA_length).mean()
@@ -38,3 +38,50 @@ def Breakout(stock_data):
     
 
     return(Breahout_long_signal_df, Breahout_short_signal_df)
+
+
+
+def Breakout_long(stock_data):
+    #Breakout parameters
+    SMA_length = 200
+    ATR_length = 20
+    
+    #Calculate ATR stop loss size, seven day low, seven day high, 200 day sma
+    close = stock_data['Close'].iloc[-1]
+    sma_filter = SMA(stock_data['Close'], SMA_length)
+    atr = ATR(stock_data, ATR_length)
+    stop_loss_long =  close - 2 * atr
+    #stop_loss_short =  close + 2 * atr
+    seven_day_low = min(stock_data['Low'].iloc[-7:])  # Example: Lowest low in the last 7 days
+    seven_day_high = max(stock_data['High'].iloc[-7:])  # Example: Highest high in the last 7 days
+    
+
+    #Return strategy signal
+    if close < seven_day_low and close > sma_filter:
+        return 1
+    if close > seven_day_high:
+        return -1
+    return 0
+    
+def Breakout_short(stock_data):
+    #Breakout parameters
+    SMA_length = 200
+    ATR_length = 20
+    
+    #Calculate ATR stop loss size, seven day low, seven day high, 200 day sma
+    close = stock_data['Close'].iloc[-1]
+    sma_filter = SMA(stock_data['Close'], SMA_length)
+    atr = ATR(stock_data, ATR_length)
+    stop_loss_long =  close - 2 * atr
+    stop_loss_short =  close + 2 * atr
+    seven_day_low = low(stock_data['Low'].shift(1), 7)
+    seven_day_high = high(stock_data['High'].shift(1), 7)
+
+    #Return strategy signal
+    if close > seven_day_high and close < sma_filter:
+        return 0
+        return 1
+    if close < seven_day_low:
+        return 0
+        return -1
+    return 0

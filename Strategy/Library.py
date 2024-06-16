@@ -11,6 +11,14 @@ def EMA(data_feed, length): #works
     EMA = data_feed.tail(length).ewm(span=length, adjust=False, min_periods = length).mean().iloc[-1]
     return EMA
 
+def high(data_feed, length):
+    high = max(data_feed.tail(length))
+    return high
+
+def low(data_feed, length):
+    low = min(data_feed.tail(length))
+    return low
+
 def RSI(data_feed, rsi_period):
     #Get latest 15 values for RSI instead of the whole array
     close_prices = data_feed['Close'].tail(rsi_period + 1)

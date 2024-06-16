@@ -2,28 +2,30 @@
 import numpy as np
 import pandas as pd
 
-def MACD_long(data):
-    #MACD parameters
-    short_ma_length = 5
-    long_ma_length = 12
-    #calculate short and long simple moving averages
-    short_ma = data['Close'][-short_ma_length:].mean()
-    long_ma = data['Close'][-long_ma_length:].mean()
-    
-    if short_ma > long_ma:
-        return 1
-    else:
-        return -1
+from Strategy.Library import MACD, EMA
 
-def MACD_short(data):
+def MACD_long(data_feed):
     #MACD parameters
-    short_ma_length = 5
-    long_ma_length = 12
-    #calculate short and long simple moving averages
-    short_ma = data['Close'][-short_ma_length:].mean()
-    long_ma = data['Close'][-long_ma_length:].mean()
+    short_ma_length, long_ma_length, signal_length, EMA_length = 5, 25, 9, 200
+    macd, signal = MACD(data_feed['Close'], short_ma_length, long_ma_length, signal_length)
+    ema_filter = EMA(data_feed['Close'], EMA_length)
 
-    if short_ma < long_ma:
+    #Return strategy signal
+    if(macd > signal and signal < 0 and data_feed['Close'].iloc[-1] > ema_filter):
         return 1
-    else:
+    if(macd < signal):
         return -1
+    return 0
+
+def MACD_short(data_feed):
+    #MACD parameters
+    short_ma_length, long_ma_length, signal_length, EMA_length = 5, 25, 9, 200
+    macd, signal = MACD(data_feed['Close'], short_ma_length, long_ma_length, signal_length)
+    ema_filter = EMA(data_feed['Close'], EMA_length)
+                     
+    #Return strategy signal
+    if(macd < signal and signal > 0 and data_feed['Close'].iloc[-1] < ema_filter):
+        return 1
+    if(macd > signal):
+        return -1
+    return 0
