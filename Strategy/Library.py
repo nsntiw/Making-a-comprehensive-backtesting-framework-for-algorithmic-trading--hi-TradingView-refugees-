@@ -12,10 +12,14 @@ def EMA(data_feed, length): #works
     return EMA
 
 def high(data_feed, length):
+    if len(data_feed) < length:
+        return np.nan
     high = max(data_feed.tail(length))
     return high
 
 def low(data_feed, length):
+    if len(data_feed) < length:
+        return np.nan
     low = min(data_feed.tail(length))
     return low
 
@@ -53,4 +57,4 @@ def ATR(data_feed, length):
     data['tr2'] = abs(low - close.shift())
     tr = data[['tr0', 'tr1', 'tr2']].max(axis=1)
     atr = wwma(tr, length)
-    return atr
+    return atr.iloc[-1]
