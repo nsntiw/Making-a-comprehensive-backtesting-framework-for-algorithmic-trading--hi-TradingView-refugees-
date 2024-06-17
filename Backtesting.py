@@ -26,12 +26,10 @@ def check_exit(close, signal, e, is_long):
 
 def exit_trades(date, close, signal, trades, open_trades, is_long):
     exited_trades = []
-    total_returns = trades['Total Return'].iloc[-1]
     for e in list(open_trades):
         if check_exit(close, signal, e, is_long):
             exited_trade = open_trades.popleft()
             returns = calc_returns(exited_trade['Entry Price'], close, is_long)
-            total_returns = total_returns * (1 + returns)
             exited_trades.append({
                 'Entry Date': exited_trade['Entry Date'],
                 'Entry Price': exited_trade['Entry Price'],
@@ -40,7 +38,6 @@ def exit_trades(date, close, signal, trades, open_trades, is_long):
                 'Exit Date': date,  # Use appropriate date here
                 'Exit Price': close,
                 'Return': returns,
-                'Total Return': total_returns,
                 #'Run-up': calc_run_up(close, exited_trade, is_long),
                 #'Drawdown': calc_drawdown(close, exited_trade, is_long)
             })
@@ -64,14 +61,6 @@ def enter_trades(date, close, signal, take_profit, stop_loss, open_long, open_sh
                                 'Entry Price': close,
                                 'TP': take_profit,
                                 'SL': stop_loss})
-def num_open_trades(trades):
-    count = 0
-    #iterate in reverse, return when it hits a non null value
-    for e in reversed(trades['Exit Date']):
-        if pd.isnull(e):
-            count += 1
-        else:
-            return count
 
 def calc_returns(entry_price, exit_price, is_long):
     if is_long:
@@ -110,11 +99,11 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
     #Add initial data for day 0 such that the equity curves start at 1
     long_trades = pd.DataFrame({'Entry Date': initial_date, 'Exit Date': initial_date, 
                                 'Entry Price': initial_price, 'TP' : 0, 'SL': 0,
-                                'Exit Price': initial_price, 'Return': 0, 'Total Return': 1,
+                                'Exit Price': initial_price, 'Return': 0,
                                 'Run-up': 0, 'Drawdown': 0}, index=[0])
     short_trades = pd.DataFrame({'Entry Date': initial_date, 'Exit Date': initial_date, 
                                 'Entry Price': initial_price, 'TP' : 0, 'SL': 0,
-                                'Exit Price': initial_price, 'Return': 0, 'Total Return': 1,
+                                'Exit Price': initial_price, 'Return': 0,
                                 'Run-up': 0, 'Drawdown': 0}, index=[0])
     open_long, open_short = [collections.deque() for _ in range(2)]
 
@@ -144,6 +133,8 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
             enter_trades(data_feed.index[-1], close, signal, take_profit, stop_loss, open_long, open_short, False)
 
     #--------------------------------------
+    long_trades['Total Return'] = np.cumprod(1 + long_trades['Return'])
+    short_trades['Total Return'] = np.cumprod(1 + short_trades['Return'])
     #Get cumulative returns by concatenating long_trades and short_trades
     cumulative_return = pd.concat([long_trades[['Exit Date', 'Return']], short_trades[['Exit Date', 'Return']]])
     cumulative_return = cumulative_return.rename(columns={'Exit Date': 'Date'})
@@ -151,6 +142,6 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
     cumulative_return.sort_values('Date', inplace=True)
     #Make the indexs sequential
     cumulative_return.reset_index(drop=True, inplace=True)
-    cumulative_return['Total Return'] = np.cumprod(1+cumulative_return['Return'])
+    cumulative_return['Total Return'] = np.cumprod(1 + cumulative_return['Return'])
     
     return long_trades, short_trades, cumulative_return
