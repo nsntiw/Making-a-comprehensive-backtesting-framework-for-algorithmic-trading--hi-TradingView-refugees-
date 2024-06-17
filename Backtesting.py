@@ -24,12 +24,12 @@ def check_exit(close, signal, e, is_long):
             return (signal == -1 or e['SL'] <= close)
         return (signal == -1 or e['TP'] >= close or e['SL'] <= close)
 
-def exit_trades(data_feed, close, signal, trades, temp, is_long):
+def exit_trades(data_feed, close, signal, trades, open_trades, is_long):
     exited_trades = []
     total_returns = trades['Total Return'].iloc[-1]
-    for e in list(temp):
+    for e in list(open_trades):
         if check_exit(close, signal, e, is_long):
-            exited_trade = temp.popleft()
+            exited_trade = open_trades.popleft()
             returns = calc_returns(exited_trade['Entry Price'], close, is_long)
             total_returns = total_returns * (1 + returns)
             exited_trades.append({
@@ -46,10 +46,10 @@ def exit_trades(data_feed, close, signal, trades, temp, is_long):
             })
     return exited_trades
 
-def check_entry(signal, trades, is_long):
+def check_entry(signal, open_long, open_short, is_long):
     if is_long:
-        return signal == 1 and trades == 0
-    pass
+        return signal == 1 and len(open_long) + len(open_short) == 0
+    return signal == 1 and len(open_short) + len(open_long) == 0
 
 def num_open_trades(trades):
     count = 0
@@ -63,8 +63,7 @@ def num_open_trades(trades):
 def calc_returns(entry_price, exit_price, long):
     if long:
         return (exit_price - entry_price) / entry_price
-    else:
-        return (entry_price - exit_price) / entry_price
+    return (entry_price - exit_price) / entry_price
 
 def calc_run_up(data_feed, trades, long):
     entry_date = trades['Entry Date'].iloc[-1]
@@ -104,8 +103,7 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
                                 'Entry Price': initial_price, 'TP' : 0, 'SL': 0,
                                 'Exit Price': initial_price, 'Return': 0, 'Total Return': 1,
                                 'Run-up': 0, 'Drawdown': 0}, index=[0])
-    temp_long = collections.deque()
-    temp_short = collections.deque()
+    open_long, open_short = [collections.deque() for _ in range(2)]
 
     for i in tqdm(range(1, len(stock_data) + 1)):
         #Use data feed instead indexing stock data
@@ -117,11 +115,11 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
             if(signal == 0):
                 continue
             #exit trade
-            temp = pd.DataFrame.from_dict(exit_trades(data_feed, close, signal, long_trades, temp_long, True))
+            temp = pd.DataFrame.from_dict(exit_trades(data_feed, close, signal, long_trades, open_long, True))
             long_trades = pd.concat([long_trades, temp], ignore_index=True)
             #enter trade
-            if(signal == 1 and len(temp_long) + len(temp_short) == 0):
-                temp_long.append({'Entry Date': data_feed.index[-1],
+            if check_entry(signal, open_long, open_short, True):
+                open_long.append({'Entry Date': data_feed.index[-1],
                                   'Entry Price': close,
                                   'TP': take_profit,
                                   'SL': stop_loss})
@@ -131,11 +129,11 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
             if(signal == 0):
                 continue
             #exit trade
-            temp = pd.DataFrame.from_dict(exit_trades(data_feed, close, signal, short_trades, temp_short, False))
+            temp = pd.DataFrame.from_dict(exit_trades(data_feed, close, signal, short_trades, open_short, False))
             short_trades = pd.concat([short_trades, temp], ignore_index=True)
             #enter trade
-            if(signal == 1 and len(temp_short) + len(temp_long) == 0):
-                temp_short.append({'Entry Date': data_feed.index[-1],
+            if check_entry(signal, open_long, open_short, False):
+                open_short.append({'Entry Date': data_feed.index[-1],
                                   'Entry Price': close,
                                   'TP': take_profit,
                                   'SL': stop_loss})
