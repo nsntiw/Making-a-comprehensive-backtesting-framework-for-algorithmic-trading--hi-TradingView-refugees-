@@ -12,7 +12,7 @@ def MACD_long(data_feed):
     long_ma = SMA(data_feed['Close'], long_ma_length)
 
     #Return strategy signal
-    return 1 if short_ma > long_ma else -1
+    return 1, 0, 0 if short_ma > long_ma else -1, 0, 0
 
 def MACD_short(data_feed):
     #MACD parameters
@@ -23,4 +23,4 @@ def MACD_short(data_feed):
     long_ma = SMA(data_feed['Close'], long_ma_length)
 
     #Return strategy signal
-    return 1 if short_ma < long_ma else -1
+    return 1, 0, 0 if short_ma < long_ma else -1, 0, 0

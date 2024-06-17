@@ -14,11 +14,11 @@ def RSI_long(data_feed):
 
     #Return strategy signal
     if rsi < rsi_oversold:
-        return 1
+        return 1, 0, 0
     if rsi > rsi_overbought:
-        return -1
+        return -1, 0, 0
     else:
-        return 0
+        return 0, 0, 0
     
 def RSI_short(data_feed):
     #RSI parameters
@@ -31,9 +31,9 @@ def RSI_short(data_feed):
 
     #Return strategy signal
     if rsi > rsi_overbought:
-        return 1
+        return 1, 0, 0
     if rsi < rsi_oversold:
-        return -1
+        return -1, 0, 0
     else:
-        return 0
+        return 0, 0, 0
     

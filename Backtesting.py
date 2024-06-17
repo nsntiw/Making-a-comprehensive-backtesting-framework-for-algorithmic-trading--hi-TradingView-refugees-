@@ -1,30 +1,56 @@
 #importing packages
 import numpy as np
 import pandas as pd
+import collections
 from tqdm import tqdm
 
 #--------------------------------------
 #Define functions
-def check_exit(close, signal, trades, is_long):
+def check_exit(close, signal, e, is_long):
     if is_long:
-        if trades['SL'].iloc[-1] == 0 and trades['TP'].iloc[-1] == 0:
-            return signal == -1 and num_open_trades(trades) >= 1
-        if trades['SL'].iloc[-1] == 0:
-            return (signal == -1 or trades['TP'].iloc[-1] <= close) and num_open_trades(trades) >= 1
-        if trades['TP'].iloc[-1] == 0:
-            return (signal == -1 or trades['SL'].iloc[-1] >= close) and num_open_trades(trades) >= 1
-        return (signal == -1 or trades['TP'].iloc[-1] <= close or trades['SL'].iloc[-1] >= close) and num_open_trades(trades) >= 1
+        if e['SL'] == 0 and e['TP'] == 0:
+            return signal == -1
+        if e['SL'] == 0:
+            return (signal == -1 or e['TP'] <= close)
+        if e['TP'] == 0:
+            return (signal == -1 or e['SL'] >= close)
+        return signal == -1 or e['TP'] <= close or e['SL'] >= close
     else:
-        if trades['SL'].iloc[-1] == 0 and trades['TP'].iloc[-1] == 0:
-            return signal == -1 and num_open_trades(trades) >= 1
-        if trades['SL'].iloc[-1] == 0:
-            return (signal == -1 or trades['TP'].iloc[-1] >= close) and num_open_trades(trades) >= 1
-        if trades['TP'].iloc[-1] == 0:
-            return (signal == -1 or trades['SL'].iloc[-1] <= close) and num_open_trades(trades) >= 1
-        return (signal == -1 or trades['TP'].iloc[-1] >= close or trades['SL'].iloc[-1] <= close) and num_open_trades(trades) >= 1
-    
-def check_entry():
+        if e['SL'] == 0 and e['TP'] == 0:
+            return signal == -1
+        if e['SL'] == 0:
+            return (signal == -1 or e['TP'] >= close)
+        if e['TP'] == 0:
+            return (signal == -1 or e['SL'] <= close)
+        return (signal == -1 or e['TP'] >= close or e['SL'] <= close)
+
+def exit_trades(data_feed, close, signal, trades, temp, is_long):
+    exited_trades = []
+    total_returns = trades['Total Return'].iloc[-1]
+    for e in list(temp):
+        if check_exit(close, signal, e, is_long):
+            exited_trade = temp.popleft()
+            returns = calc_returns(exited_trade['Entry Price'], close, is_long)
+            total_returns = total_returns * (1 + returns)
+            exited_trades.append({
+                'Entry Date': exited_trade['Entry Date'],
+                'Entry Price': exited_trade['Entry Price'],
+                'TP': exited_trade['TP'],
+                'SL': exited_trade['SL'],
+                'Exit Date': data_feed.index[-1],  # Use appropriate date here
+                'Exit Price': close,
+                'Return': returns,
+                'Total Return': total_returns,
+                #'Run-up': calc_run_up(close, exited_trade, is_long),
+                #'Drawdown': calc_drawdown(close, exited_trade, is_long)
+            })
+    return exited_trades
+
+def check_entry(signal, trades, is_long):
+    if is_long:
+        return signal == 1 and trades == 0
     pass
+
 def num_open_trades(trades):
     count = 0
     #iterate in reverse, return when it hits a non null value
@@ -78,61 +104,41 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
                                 'Entry Price': initial_price, 'TP' : 0, 'SL': 0,
                                 'Exit Price': initial_price, 'Return': 0, 'Total Return': 1,
                                 'Run-up': 0, 'Drawdown': 0}, index=[0])
-    temp_long = []
-    temp_short = []
+    temp_long = collections.deque()
+    temp_short = collections.deque()
 
     for i in tqdm(range(1, len(stock_data) + 1)):
         #Use data feed instead indexing stock data
         data_feed = stock_data.iloc[:i]
         close = data_feed['Close'].iloc[-1]
         if enable_long:
-            #exit trade
+            #no trade
             signal, take_profit, stop_loss = strategy_long(data_feed)
             if(signal == 0):
                 continue
-            if check_exit(close, signal, long_trades, True):
-                exit_index = long_trades[long_trades['Exit Date'].isnull()].index[0]
-                long_trades.loc[exit_index, ['Exit Date', 'Exit Price', 'Return', 'Total Return', 'Run-up', 'Drawdown']] = [
-                    data_feed.index[-1],
-                    close,
-                    calc_returns(long_trades.at[exit_index, 'Entry Price'], close, True),
-                    long_trades.at[exit_index-1, 'Total Return'] * (1 + calc_returns(long_trades.at[exit_index, 'Entry Price'], close, True)),
-                    calc_run_up(data_feed, long_trades, True),
-                    calc_drawdown(data_feed, long_trades, True)
-                ]
-            #enter trade
-            if(signal == 1 and num_open_trades(long_trades) + num_open_trades(short_trades) == 0):
-                new_row = pd.DataFrame({
-                    'Entry Date': data_feed.index[-1],
-                    'Entry Price': close,
-                    'TP': take_profit,
-                    'SL': stop_loss
-                }, index=[0])
-                long_trades = pd.concat([long_trades, new_row], ignore_index=True)
-        if enable_short:
             #exit trade
-            signal, TP, SL = strategy_short(data_feed)
+            temp = pd.DataFrame.from_dict(exit_trades(data_feed, close, signal, long_trades, temp_long, True))
+            long_trades = pd.concat([long_trades, temp], ignore_index=True)
+            #enter trade
+            if(signal == 1 and len(temp_long) + len(temp_short) == 0):
+                temp_long.append({'Entry Date': data_feed.index[-1],
+                                  'Entry Price': close,
+                                  'TP': take_profit,
+                                  'SL': stop_loss})
+        if enable_short:
+            #no trade
+            signal, take_profit, stop_loss = strategy_short(data_feed)
             if(signal == 0):
                 continue
-            if check_exit(close, signal, short_trades, False):
-                exit_index = short_trades[short_trades['Exit Date'].isnull()].index[0]
-                short_trades.loc[exit_index, ['Exit Date', 'Exit Price', 'Return', 'Total Return', 'Run-up', 'Drawdown']] = [
-                    data_feed.index[-1],
-                    data_feed['Close'].iloc[-1],
-                    calc_returns(short_trades.at[exit_index, 'Entry Price'], close, False),
-                    short_trades.at[exit_index-1, 'Total Return'] + calc_returns(short_trades.at[exit_index, 'Entry Price'], close, False),
-                    calc_run_up(data_feed, short_trades, False),
-                    calc_drawdown(data_feed, short_trades, False)
-                ]
+            #exit trade
+            temp = pd.DataFrame.from_dict(exit_trades(data_feed, close, signal, short_trades, temp_short, False))
+            short_trades = pd.concat([short_trades, temp], ignore_index=True)
             #enter trade
-            if(signal == 1 and num_open_trades(short_trades) + num_open_trades(short_trades) == 0):
-                new_row = pd.DataFrame({
-                    'Entry Date': [data_feed.index[-1]], 
-                    'Entry Price': [close],
-                    'TP': [TP], 'SL': [SL]
-                }, index=[0])
-                short_trades = pd.concat([short_trades, new_row], ignore_index=True)
-
+            if(signal == 1 and len(temp_short) + len(temp_long) == 0):
+                temp_short.append({'Entry Date': data_feed.index[-1],
+                                  'Entry Price': close,
+                                  'TP': take_profit,
+                                  'SL': stop_loss})
 
     #--------------------------------------
     #Get cumulative returns by concatenating long_trades and short_trades

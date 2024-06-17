@@ -11,10 +11,10 @@ def MACD_long(data_feed):
 
     #Return strategy signal
     if(macd > signal and signal < 0 and data_feed['Close'].iloc[-1] > ema_filter):
-        return 1
+        return 1, 0, 0
     if(macd < signal):
-        return -1
-    return 0
+        return -1, 0, 0
+    return 0, 0, 0
 
 def MACD_short(data_feed):
     #MACD parameters
@@ -24,7 +24,7 @@ def MACD_short(data_feed):
                      
     #Return strategy signal
     if(macd < signal and signal > 0 and data_feed['Close'].iloc[-1] < ema_filter):
-        return 1
+        return 1, 0, 0
     if(macd > signal):
-        return -1
-    return 0
+        return -1, 0, 0
+    return 0, 0, 0  
