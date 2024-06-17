@@ -151,10 +151,10 @@ def equity_curve(stock_data, cumulative_return, long_trades, short_trades):
     plt.plot(stock_data.index, stock_data['Total % Return'], label = 'Buy and Hold')
     #Use step because plt.plot will draw a straight line between datapoints that exists
     plt.step(cumulative_return['Date'], cumulative_return['Total Return'], label = "Total")
-    plt.step(long_trades['Exit Date'], long_trades['Total Return'], label = 'Long')
-    plt.step(short_trades['Exit Date'], short_trades['Total Return'], label = 'Short')
+    plt.step(long_trades['Date2'], long_trades['Total Return'], label = 'Long')
+    plt.step(short_trades['Date2'], short_trades['Total Return'], label = 'Short')
 
-    plt.title('Stock Price'), plt.xlabel('Time (Trading days)'), plt.ylabel('Price'), plt.legend()
+    plt.title('Equity curve'), plt.xlabel('Time (Trading days)'), plt.ylabel('Price'), plt.legend()
     plt.grid(True)
     plt.show()
 

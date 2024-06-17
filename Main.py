@@ -9,55 +9,51 @@ import math
 
 #--------------------------------------
 #Download or read downloaded stock data csv files
+stock_input = []
 #NEDL_MACD
-#stock_name = 'XOM'
-#starting_date = '2016-01-01'
-#ending_date = '2021-03-18'
+#stock_input.append({'name': 'XOM', 'starting_date': '2016-01-01', 'ending_date': '2021-03-18'})
 #NEDL_RSI
-#stock_name = 'KO'
-#starting_date = '2016-01-01'
-#ending_date = '2021-03-21'
+#stock_input.append({'name': 'KO', 'starting_date': '2016-01-01', 'ending_date': '2021-03-21'})
 #TR_MACD
-#stock_name = 'EURJPY=X'
-#starting_date = '2002-07-01'
-#ending_date = '2024-02-05'
+#stock_input.append({'name': 'EURJPY=X', 'starting_date': '2002-07-01', 'ending_date': '2024-02-05'})
 #CriticalTrading_Breakout, seasonality
-stock_name = 'SPY'
-starting_date = '2007-12-30'
-ending_date = '2021-03-18'
-#stock_name = 'TLT'
-#starting_date = '2007-12-30'
-#ending_date = '2021-03-18'
+stock_input.append({'name': 'SPY', 'starting_date': '2007-12-30', 'ending_date': '2021-03-18'})
+stock_input.append({'name': 'TLT', 'starting_date': '2007-12-30', 'ending_date': '2021-03-18'})
 
-stock_data = IO_handler.get_stock_data(stock_name, starting_date, ending_date)
+stock_data = [IO_handler.get_stock_data(e['name'], e['starting_date'], e['ending_date']) for e in stock_input]
 #--------------------------------------
 #specifying backtesting parameters
 fee = 0.0005 #implement
-enable_long = True
-enable_short = True
+enable_long, enable_short = True, False
 pyramiding_num_trades = 0
 
 #--------------------------------------
-#Calculate stock percentage and log returns
-stock_data['% Return'] = stock_data['Close'].pct_change()
-#Log returns overestimates negative returns and underestimates positive returns
-stock_data['Log Return'] = np.log(stock_data['Close'] / stock_data['Close'].shift(1))
-stock_data['Total % Return'] = np.cumprod(1+stock_data['% Return'])
+#stock_data = stock_data1[-1]
+def calculate_returns(stock_data):
+    #Calculate stock percentage and log returns
+    stock_data['% Return'] = stock_data['Close'].pct_change()
+    #Log returns overestimates negative returns and underestimates positive returns
+    stock_data['Log Return'] = np.log(stock_data['Close'] / stock_data['Close'].shift(1))
+    stock_data['Total % Return'] = np.cumprod(1+stock_data['% Return'])
+[calculate_returns(e) for e in stock_data]
 
-print(f'Stock Data for {stock_name}:'), Plotting_Printing.print_df(stock_data)
+for e1, e2 in zip(stock_input, stock_data):
+    print(f'Stock Data for {e1['name']}:'), Plotting_Printing.print_df(e2)
+
 #--------------------------------------
-#from Strategy.NEDL_MACD import MACD_long,MACD_short
-#strategy_long, strategy_short = MACD_long, MACD_short
+strategy_long = []
+strategy_short = []
+#from Strategy.NEDL_MACD import MACD_long, MACD_short
+#strategy_long.append(MACD_long), strategy_short.append(MACD_short)
 #from Strategy.NEDL_RSI import RSI_long, RSI_short
-#strategy_long, strategy_short = RSI_long, RSI_short
+#strategy_long.append(RSI_long), strategy_short.append(RSI_short)
 #from Strategy.TR_MACD import MACD_long, MACD_short
-#strategy_long, strategy_short = MACD_long, MACD_short
+#strategy_long.append(MACD_long), strategy_short.append(MACD_short)
 #from Strategy.CriticalTrading_Breakout import Breakout_long, Breakout_short
-#strategy_long, strategy_short = Breakout_long, Breakout_short
-from Strategy.CriticalTrading_SPY_Seasonality import seasonality_long, seasonality_short
-strategy_long, strategy_short = seasonality_long, seasonality_short
-#from Strategy.CriticalTrading_TLT_Seasonality import seasonality_long, seasonality_short
-#strategy_long, strategy_short = seasonality_long, seasonality_short
+#strategy_long.append(Breakout_long), strategy_short.append(Breakout_short)
+from Strategy.CriticalTrading_Seasonality import SPY_seasonality_long, SPY_seasonality_short,TLT_seasonality_long, TLT_seasonality_short
+strategy_long.append(SPY_seasonality_long), strategy_short.append(SPY_seasonality_short)
+strategy_long.append(TLT_seasonality_long), strategy_short.append(TLT_seasonality_short)
 
 #--------------------------------------
 #Generate trades
@@ -72,11 +68,11 @@ print("Total:"), Plotting_Printing.print_df(cumulative_return)
 #styler
 #--------------------------------------
 #Print TV states and plot equity curve (percentage)
-Plotting_Printing.print_TV_stats(stock_data, cumulative_return, long_trades, short_trades)
+Plotting_Printing.print_TV_stats(stock_data[0], cumulative_return, long_trades, short_trades)
 long_non_nan = long_trades.dropna(subset=['Total Return'])
 short_non_nan = short_trades.dropna(subset=['Total Return'])
 cumulative_non_nan = cumulative_return.dropna(subset=['Total Return'])
-Plotting_Printing.equity_curve(stock_data, cumulative_non_nan, long_non_nan, short_non_nan)
+Plotting_Printing.equity_curve(stock_data[0], cumulative_non_nan, long_non_nan, short_non_nan)
 
 #--------------------------------------
 #Plotting 1D histogram
@@ -95,8 +91,8 @@ bin_size = int(len(cumulative_return['Return']) ** 0.5) * 2
 #Plotting_Printing.hist1d_base(data, default_bin_size)
 Plotting_Printing.hist1d_stdev_mu(data[2:], bin_size)
 
-long_trades['Length'] = (long_trades['Exit Date'] - long_trades['Entry Date']).dt.days
-short_trades['Length'] = (short_trades['Exit Date'] - short_trades['Entry Date']).dt.days
+long_trades['Length'] = (long_trades['Date2'] - long_trades['Date1']).dt.days
+short_trades['Length'] = (short_trades['Date2'] - short_trades['Date1']).dt.days
 cumulative_return = pd.concat([long_trades[['Length']], short_trades[['Length']]])
 data1 = cumulative_return['Length']
 
