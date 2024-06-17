@@ -22,12 +22,12 @@ import math
 #starting_date = '2002-07-01'
 #ending_date = '2024-02-05'
 #CriticalTrading_Breakout, seasonality
-#stock_name = 'SPY'
-#starting_date = '2007-12-30'
-#ending_date = '2021-03-18'
-stock_name = 'TLT'
+stock_name = 'SPY'
 starting_date = '2007-12-30'
 ending_date = '2021-03-18'
+#stock_name = 'TLT'
+#starting_date = '2007-12-30'
+#ending_date = '2021-03-18'
 
 stock_data = IO_handler.get_stock_data(stock_name, starting_date, ending_date)
 #--------------------------------------
@@ -56,8 +56,8 @@ print(f'Stock Data for {stock_name}:'), Plotting_Printing.print_df(stock_data)
 #strategy_long, strategy_short = Breakout_long, Breakout_short
 from Strategy.CriticalTrading_SPY_Seasonality import seasonality_long, seasonality_short
 strategy_long, strategy_short = seasonality_long, seasonality_short
-from Strategy.CriticalTrading_TLT_Seasonality import seasonality_long, seasonality_short
-strategy_long, strategy_short = seasonality_long, seasonality_short
+#from Strategy.CriticalTrading_TLT_Seasonality import seasonality_long, seasonality_short
+#strategy_long, strategy_short = seasonality_long, seasonality_short
 
 #--------------------------------------
 #Generate trades

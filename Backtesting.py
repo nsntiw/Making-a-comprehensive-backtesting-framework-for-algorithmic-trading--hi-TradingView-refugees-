@@ -24,7 +24,7 @@ def check_exit(close, signal, e, is_long):
             return (signal == -1 or e['SL'] <= close)
         return (signal == -1 or e['TP'] >= close or e['SL'] <= close)
 
-def exit_trades(data_feed, close, signal, trades, open_trades, is_long):
+def exit_trades(date, close, signal, trades, open_trades, is_long):
     exited_trades = []
     total_returns = trades['Total Return'].iloc[-1]
     for e in list(open_trades):
@@ -37,7 +37,7 @@ def exit_trades(data_feed, close, signal, trades, open_trades, is_long):
                 'Entry Price': exited_trade['Entry Price'],
                 'TP': exited_trade['TP'],
                 'SL': exited_trade['SL'],
-                'Exit Date': data_feed.index[-1],  # Use appropriate date here
+                'Exit Date': date,  # Use appropriate date here
                 'Exit Price': close,
                 'Return': returns,
                 'Total Return': total_returns,
@@ -51,6 +51,19 @@ def check_entry(signal, open_long, open_short, is_long):
         return signal == 1 and len(open_long) + len(open_short) == 0
     return signal == 1 and len(open_short) + len(open_long) == 0
 
+def enter_trades(date, close, signal, take_profit, stop_loss, open_long, open_short, is_long):
+    if is_long:
+        if check_entry(signal, open_long, open_short, is_long):
+            open_long.append({'Entry Date': date,
+                                'Entry Price': close,
+                                'TP': take_profit,
+                                'SL': stop_loss})
+    else:
+        if check_entry(signal, open_long, open_short, is_long):
+            open_short.append({'Entry Date': date,
+                                'Entry Price': close,
+                                'TP': take_profit,
+                                'SL': stop_loss})
 def num_open_trades(trades):
     count = 0
     #iterate in reverse, return when it hits a non null value
@@ -60,15 +73,15 @@ def num_open_trades(trades):
         else:
             return count
 
-def calc_returns(entry_price, exit_price, long):
-    if long:
+def calc_returns(entry_price, exit_price, is_long):
+    if is_long:
         return (exit_price - entry_price) / entry_price
     return (entry_price - exit_price) / entry_price
 
-def calc_run_up(data_feed, trades, long):
+def calc_run_up(data_feed, trades, is_long):
     entry_date = trades['Entry Date'].iloc[-1]
     entry_price = trades['Entry Price'].iloc[-1]
-    if long:
+    if is_long:
         #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Current_High - Entry_Price)
         high = data_feed.loc[entry_date:, 'High'].values
         return max(high) - entry_price
@@ -77,10 +90,10 @@ def calc_run_up(data_feed, trades, long):
         low = data_feed.loc[entry_date:, 'Low'].values
         return entry_price - min(low)
 
-def calc_drawdown(data_feed, trades, long):
+def calc_drawdown(data_feed, trades, is_long):
     entry_date = trades['Entry Date'].iloc[-1]
     entry_price = trades['Entry Price'].iloc[-1]
-    if long:
+    if is_long:
         #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Current_High - Entry_Price)
         low = data_feed.loc[entry_date:, 'Low'].values
         return entry_price - min(low)
@@ -115,28 +128,20 @@ def generate_trades(stock_data, strategy_long, strategy_short, enable_long, enab
             if(signal == 0):
                 continue
             #exit trade
-            temp = pd.DataFrame.from_dict(exit_trades(data_feed, close, signal, long_trades, open_long, True))
+            temp = pd.DataFrame.from_dict(exit_trades(data_feed.index[-1], close, signal, long_trades, open_long, True))
             long_trades = pd.concat([long_trades, temp], ignore_index=True)
             #enter trade
-            if check_entry(signal, open_long, open_short, True):
-                open_long.append({'Entry Date': data_feed.index[-1],
-                                  'Entry Price': close,
-                                  'TP': take_profit,
-                                  'SL': stop_loss})
+            enter_trades(data_feed.index[-1], close, signal, take_profit, stop_loss, open_long, open_short, True)
         if enable_short:
             #no trade
             signal, take_profit, stop_loss = strategy_short(data_feed)
             if(signal == 0):
                 continue
             #exit trade
-            temp = pd.DataFrame.from_dict(exit_trades(data_feed, close, signal, short_trades, open_short, False))
+            temp = pd.DataFrame.from_dict(exit_trades(data_feed.index[-1], close, signal, short_trades, open_short, False))
             short_trades = pd.concat([short_trades, temp], ignore_index=True)
             #enter trade
-            if check_entry(signal, open_long, open_short, False):
-                open_short.append({'Entry Date': data_feed.index[-1],
-                                  'Entry Price': close,
-                                  'TP': take_profit,
-                                  'SL': stop_loss})
+            enter_trades(data_feed.index[-1], close, signal, take_profit, stop_loss, open_long, open_short, False)
 
     #--------------------------------------
     #Get cumulative returns by concatenating long_trades and short_trades
