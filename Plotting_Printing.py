@@ -24,16 +24,16 @@ def print_df(df):
         formatted_df.index = df.index.strftime('%Y-%m-%d')
     print(tabulate(formatted_df, headers = df.columns.tolist(), tablefmt="github", numalign="right", stralign="right"))
 
-def print_TV_stats(stock, cumulative, long, short, enable_long, enable_short): #No longer passing in cumulative, long, short with slice indexing to get rid of initial trade
-    C_GP = cumulative[cumulative['Return'] > 0]['Return'].sum() * 100
+def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No longer passing in cumulative, long, short with slice indexing to get rid of initial trade
+    C_GP = total[total['Return'] > 0]['Return'].sum() * 100
     L_GP = long[long['Return'] > 0]['Return'].sum() * 100
     S_GP = short[short['Return'] > 0]['Return'].sum() * 100
-    C_GL = cumulative[cumulative['Return'] < 0]['Return'].sum() * 100
+    C_GL = total[total['Return'] < 0]['Return'].sum() * 100
     L_GL = long[long['Return'] < 0]['Return'].sum() * 100
     S_GL = short[short['Return'] < 0]['Return'].sum() * 100
     C_NP, C_PF, L_NP, L_TOT, L_PF, S_NP, S_TOT, S_PF, open_pl = 0,0,0,0,0,0,0,0,0
     try:
-        C_NP = (cumulative['Total Return'].dropna().iloc[-1] - 1) * 100
+        C_NP = (total['Total Return'].dropna().iloc[-1] - 1) * 100
         C_PF = C_GP / abs(C_GL)
     except:
         print('The backtest produced no trades')
@@ -41,13 +41,13 @@ def print_TV_stats(stock, cumulative, long, short, enable_long, enable_short): #
         L_NP = (long['Total Return'].dropna().iloc[-1] - 1) * 100
         L_PF = L_GP / abs(L_GL)
         if np.isnan(long['Return'].iloc[-1]):#refactor into loop
-            open_pl += (stock['Close'].iloc[-1] - long['Entry Price'].iloc[-1]) / long['Entry Price'].iloc[-1]
+            open_pl += (stock['Close'].iloc[-1] - long['P1'].iloc[-1]) / long['P1'].iloc[-1]
             L_TOT += 1
     if enable_short:
         S_NP = (short['Total Return'].dropna().iloc[-1] - 1) * 100
         S_PF = S_GP / abs(S_GL)
         if np.isnan(short['Return'].iloc[-1]):
-            open_pl += (short['Entry Price'].iloc[-1] - stock['Close'].iloc[-1]) / short['Entry Price'].iloc[-1]
+            open_pl += (short['P1'].iloc[-1] - stock['Close'].iloc[-1]) / short['P1'].iloc[-1]
             S_TOT += 1
 
     
@@ -61,7 +61,7 @@ def print_TV_stats(stock, cumulative, long, short, enable_long, enable_short): #
     A_BnH_Return = ((1 + BnH_Return / 100) ** (252 / len(stock)) - 1) * 100
     A_BnH_Risk = stock['% Return'].std() * (252)**(1/2) * 100
     A_C_Return = ((1 + C_NP / 100) ** (252 / len(stock)) - 1) * 100
-    A_C_Risk = cumulative['Return'].dropna().std() * (252)**(1/2) * 100
+    A_C_Risk = total['Return'].dropna().std() * (252)**(1/2) * 100
     A_L_Return = ((1 + L_NP / 100) ** (252 / len(stock)) - 1) * 100
     A_L_Risk = long['Return'].dropna().std() * (252)**(1/2) * 100
     A_S_Return = ((1 + S_NP / 100) ** (252 / len(stock)) - 1) * 100
@@ -72,7 +72,7 @@ def print_TV_stats(stock, cumulative, long, short, enable_long, enable_short): #
     A_L_ShR = (A_L_Return / 100 - risk_free_rate) / (A_L_Risk / 100)
     A_S_ShR = (A_S_Return / 100 - risk_free_rate) / (A_S_Risk / 100)
     A_BnH_Risk_Down = stock[stock['% Return'] < 0]['% Return'].std() * (252)**(1/2) * 100
-    A_C_Risk_Down = cumulative[cumulative['Return'] < 0]['Return'].dropna().std() * (252)**(1/2) * 100
+    A_C_Risk_Down = total[total['Return'] < 0]['Return'].dropna().std() * (252)**(1/2) * 100
     A_L_Risk_Down = long[long['Return'] < 0]['Return'].dropna().std() * (252)**(1/2) * 100
     A_S_Risk_Down = short[short['Return'] < 0]['Return'].dropna().std() * (252)**(1/2) * 100
     A_BnH_SoR = (A_BnH_Return / 100 - risk_free_rate) / (A_BnH_Risk_Down / 100)
@@ -83,17 +83,17 @@ def print_TV_stats(stock, cumulative, long, short, enable_long, enable_short): #
 
 
     C_TOT = L_TOT + S_TOT
-    C_TCT = len(cumulative) - C_TOT - 2
+    C_TCT = len(total) - C_TOT - 2
     L_TCT = len(long) - L_TOT - 1
     S_TCT = len(short) - S_TOT - 1
     C_AT = C_NP / C_TCT 
     L_AT = L_NP / L_TCT
     S_AT = S_NP / S_TCT
     #commission paid
-    C_NWT = (cumulative['Return'] > 0).sum()
+    C_NWT = (total['Return'] > 0).sum()
     L_NWT = (long['Return'] > 0).sum()
     S_NWT = (short['Return'] > 0).sum()
-    C_NLT = (cumulative['Return'] <= 0).sum()
+    C_NLT = (total['Return'] <= 0).sum()
     L_NLT = (long['Return'] <= 0).sum()
     S_NLT = (short['Return'] <= 0).sum()
     C_PP = C_NWT / C_TCT * 100
@@ -108,10 +108,10 @@ def print_TV_stats(stock, cumulative, long, short, enable_long, enable_short): #
     C_RAWAL = C_AWT / abs(C_ALT)
     L_RAWAL = L_AWT / abs(L_ALT)
     S_RAWAL = S_AWT / abs(S_ALT)
-    C_LWT = cumulative['Return'].max() * 10
+    C_LWT = total['Return'].max() * 10
     L_LWT = long['Return'].max() * 100
     S_LWT = short['Return'].max() * 100
-    C_LLT = cumulative['Return'].min() * 100
+    C_LLT = total['Return'].min() * 100
     L_LLT = long['Return'].min() * 100
     S_LLT = short['Return'].min() * 100
     C_ANBIT = 0
@@ -162,18 +162,18 @@ def print_TV_stats(stock, cumulative, long, short, enable_long, enable_short): #
     table.append(["Margin Calls"])
     print(tabulate(table, headers = ['Stats','Cumulative','Long','Short'], tablefmt="simple_grid"))
 
-def equity_curve(stock_data, cumulative_return, long_trades, short_trades):
+def equity_curve(stock_data, total, long, short):
     _, (ax1, ax2) = plt.subplots(nrows = 2, sharex = True, height_ratios = [2.5, 1])
     #visualizing equity curve (percentage)
     ax1.plot(stock_data.index, stock_data['Total % Return'], label = 'Buy and Hold')
 
     #Add initial datapoint so the curves start at 1 on day 0
-    cum_date = [stock_data.index[0]] + cumulative_return['Date'].tolist()
-    cum_return = [1] + cumulative_return['Total Return'].tolist()
-    long_date = [stock_data.index[0]] + long_trades['Date2'].tolist()
-    long_return = [1] + long_trades['Total Return'].tolist()
-    short_date = [stock_data.index[0]] + short_trades['Date2'].tolist()
-    short_return = [1] + short_trades['Total Return'].tolist()
+    cum_date = [stock_data.index[0]] + total['Date'].tolist()
+    cum_return = [1] + total['Total Return'].tolist()
+    long_date = [stock_data.index[0]] + long['Date2'].tolist()
+    long_return = [1] + long['Total Return'].tolist()
+    short_date = [stock_data.index[0]] + short['Date2'].tolist()
+    short_return = [1] + short['Total Return'].tolist()
 
     #Use step because plt.plot will draw a straight line between datapoints
     ax1.step(cum_date, cum_return, label = "Total")
@@ -184,7 +184,7 @@ def equity_curve(stock_data, cumulative_return, long_trades, short_trades):
     ax1.legend()
     ax1.grid(True)
 
-    long_drawdown = [0] + [-e for e in long_trades['Drawdown'].tolist()]
+    long_drawdown = [0] + [-e for e in long['Drawdown'].tolist()]
     ax2.step(long_date, long_drawdown, label = "Drawdown")
     ax2.set_xlabel('Date'), ax2.set_ylabel('Drawdown')
     ax2.legend()
@@ -205,13 +205,14 @@ def calc_bin(data, formula_num):
     bin_width = int((3.5 * np.std(data))/(len(data) ** (1/3)))
     return int((max(data) - min(data)) / bin_width)
 
-def hist1d_base(data, bin):
+def hist1d_base(data, formula_num):
+    bin = calc_bin(data, formula_num)
     plt.hist(data, bin)
     plt.xlabel('Values'), plt.ylabel('Frequency'), plt.title("Returns Histogram"), plt.grid(True)
     plt.show()
 
 def hist1d_stdev_mu(data, formula_num):
-    bin = calc_bin(data, 2)
+    bin = calc_bin(data, formula_num)
     # N is the count in each bin, bins is the lower-limit of the bin
     N, bins, patches = plt.hist(data, bins=bin)
     # We'll color code by height, but you could use any scalar
@@ -244,6 +245,6 @@ def hist1d_stdev_mu(data, formula_num):
     plt.show()
 
 def hist2d_base(data, data1, formula_num):
-    bin = calc_bin(data, 2)
+    bin = calc_bin(data, formula_num)
     plt.hist2d(data, data1, bin)
     plt.show()

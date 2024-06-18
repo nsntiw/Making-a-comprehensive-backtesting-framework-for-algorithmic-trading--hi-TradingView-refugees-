@@ -118,7 +118,7 @@ def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, e
                 if(signal == 0):
                     continue
                 #exit trade
-                temp = pd.DataFrame.from_dict(exit_trades(asset, data_feed.index[-1], close, signal, open_short, False))
+                temp = pd.DataFrame.from_dict(exit_trades(asset, data_feed, close, signal, open_short, False))
                 if not temp.empty:
                     short_trades = pd.concat([short_trades, temp], ignore_index=True)
                 #enter trade
@@ -133,12 +133,12 @@ def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, e
     long_trades['Total Return'] = np.cumprod(1 + long_trades['Return'])
     short_trades['Total Return'] = np.cumprod(1 + short_trades['Return'])
     #Get cumulative returns by concatenating long_trades and short_trades
-    cumulative_return = pd.concat([long_trades[['Date2', 'Return']], short_trades[['Date2', 'Return']]])
-    cumulative_return = cumulative_return.rename(columns={'Date2': 'Date'})
+    total_return = pd.concat([long_trades[['Date2', 'Return']], short_trades[['Date2', 'Return']]])
+    total_return = total_return.rename(columns={'Date2': 'Date'})
     #Sort by date first
-    cumulative_return.sort_values('Date', inplace=True)
+    total_return.sort_values('Date', inplace=True)
     #Make the indexs sequential
-    cumulative_return.reset_index(drop=True, inplace=True)
-    cumulative_return['Total Return'] = np.cumprod(1 + cumulative_return['Return'])
+    total_return.reset_index(drop=True, inplace=True)
+    total_return['Total Return'] = np.cumprod(1 + total_return['Return'])
     
-    return long_trades, short_trades, cumulative_return
+    return long_trades, short_trades, total_return
