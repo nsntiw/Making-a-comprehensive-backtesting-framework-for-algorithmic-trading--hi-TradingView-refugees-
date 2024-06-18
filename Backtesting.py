@@ -107,7 +107,8 @@ def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, e
                     continue
                 #exit trade
                 temp = pd.DataFrame.from_dict(exit_trades(asset, data_feed, close, signal, open_long, True))
-                long_trades = pd.concat([long_trades, temp], ignore_index=True)
+                if not temp.empty:
+                    long_trades = pd.concat([long_trades, temp], ignore_index=True)
                 #enter trade
                 if check_entry(signal, open_long, open_short, True):
                     enter_trades(asset, data_feed.index[-1], close, take_profit, stop_loss, open_long, open_short, True)
@@ -118,7 +119,8 @@ def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, e
                     continue
                 #exit trade
                 temp = pd.DataFrame.from_dict(exit_trades(asset, data_feed.index[-1], close, signal, open_short, False))
-                short_trades = pd.concat([short_trades, temp], ignore_index=True)
+                if not temp.empty:
+                    short_trades = pd.concat([short_trades, temp], ignore_index=True)
                 #enter trade
                 if check_entry(signal, open_long, open_short, False):
                     enter_trades(asset, data_feed.index[-1], close, take_profit, stop_loss, open_long, open_short, False)

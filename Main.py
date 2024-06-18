@@ -76,7 +76,7 @@ print("Total:"), Plotting_Printing.print_df(cumulative_return)
 #--------------------------------------
 #Print TV states and plot equity curve (percentage)
 print('-' * term_size.columns)
-Plotting_Printing.print_TV_stats(stock_data[0], cumulative_return, long_trades, short_trades)
+Plotting_Printing.print_TV_stats(stock_data[0], cumulative_return, long_trades, short_trades, enable_long, enable_short)
 long_non_nan = long_trades.dropna(subset=['Total Return'])
 short_non_nan = short_trades.dropna(subset=['Total Return'])
 cumulative_non_nan = cumulative_return.dropna(subset=['Total Return'])
@@ -86,22 +86,12 @@ Plotting_Printing.equity_curve(stock_data[0], cumulative_non_nan, long_non_nan, 
 #Plotting 1D histogram
 data = cumulative_return['Return'].dropna() * 100
 
-#Sturges' Formula, assumes normal distribution 
-#bin_size = int(math.log(len(cumulative_return['Return']), 2)) + 1
-
-#Rice Rule, similar to Sturges' formula but generally results in a larger number of bins
-bin_size = int(len(cumulative_return['Return']) ** 0.5) * 2
-
-#Scott's Rule, based on minimizing the integrated mean squared error for the histogram as an estimator of the probability density function
-#bin_width = int((3.5 * np.std(data))/(len(data) ** (1/3)))
-#bin_size = int((max(data) - min(data)) / bin_width)
-
-#Plotting_Printing.hist1d_base(data, default_bin_size)
-Plotting_Printing.hist1d_stdev_mu(data[2:], bin_size)
+#Plotting_Printing.hist1d_base(data)
+Plotting_Printing.hist1d_stdev_mu(data, 2)
 
 long_trades['Length'] = (long_trades['Date2'] - long_trades['Date1']).dt.days
 short_trades['Length'] = (short_trades['Date2'] - short_trades['Date1']).dt.days
 cumulative_return = pd.concat([long_trades[['Length']], short_trades[['Length']]])
 data1 = cumulative_return['Length']
 
-Plotting_Printing.hist2d_base(data, data1, bin_size)
+Plotting_Printing.hist2d_base(data, data1, 2)

@@ -4,6 +4,7 @@ from matplotlib import colors
 import numpy as np
 import pandas as pd
 from scipy import stats
+import math
 
 def format_df_value(x):
     if isinstance(x, (int, float)):
@@ -23,35 +24,32 @@ def print_df(df):
         formatted_df.index = df.index.strftime('%Y-%m-%d')
     print(tabulate(formatted_df, headers = df.columns.tolist(), tablefmt="github", numalign="right", stralign="right"))
 
-def print_TV_stats(stock, cumulative, long, short): #No longer passing in cumulative, long, short with slice indexing to get rid of initial trade
-    C_NP, C_PF, L_NP, L_TOT, L_PF, S_NP, S_TOT, S_PF, open_pl = 0,0,0,0,0,0,0,0,0
-    try:
-        C_NP = (cumulative['Total Return'].dropna().iloc[-1] - 1) * 100
-        C_PF = C_GP / abs(C_GL)
-    except:
-        pass
-    try:
-        L_NP = (long['Total Return'].dropna().iloc[-1] - 1) * 100
-        L_PF = L_GP / abs(L_GL)
-        if np.isnan(long['Return'].iloc[-1]):#refactor into loop
-            open_pl += (stock['Close'].iloc[-1] - long['Entry Price'].iloc[-1]) / long['Entry Price'].iloc[-1]
-            L_TOT += 1
-    except:
-        pass
-    try:
-        S_NP = (short['Total Return'].dropna().iloc[-1] - 1) * 100
-        S_PF = S_GP / abs(S_GL)
-        if np.isnan(short['Return'].iloc[-1]):
-            open_pl += (short['Entry Price'].iloc[-1] - stock['Close'].iloc[-1]) / short['Entry Price'].iloc[-1]
-            S_TOT += 1
-    except:
-        pass
+def print_TV_stats(stock, cumulative, long, short, enable_long, enable_short): #No longer passing in cumulative, long, short with slice indexing to get rid of initial trade
     C_GP = cumulative[cumulative['Return'] > 0]['Return'].sum() * 100
     L_GP = long[long['Return'] > 0]['Return'].sum() * 100
     S_GP = short[short['Return'] > 0]['Return'].sum() * 100
     C_GL = cumulative[cumulative['Return'] < 0]['Return'].sum() * 100
     L_GL = long[long['Return'] < 0]['Return'].sum() * 100
     S_GL = short[short['Return'] < 0]['Return'].sum() * 100
+    C_NP, C_PF, L_NP, L_TOT, L_PF, S_NP, S_TOT, S_PF, open_pl = 0,0,0,0,0,0,0,0,0
+    try:
+        C_NP = (cumulative['Total Return'].dropna().iloc[-1] - 1) * 100
+        C_PF = C_GP / abs(C_GL)
+    except:
+        print('The backtest produced no trades')
+    if enable_long:
+        L_NP = (long['Total Return'].dropna().iloc[-1] - 1) * 100
+        L_PF = L_GP / abs(L_GL)
+        if np.isnan(long['Return'].iloc[-1]):#refactor into loop
+            open_pl += (stock['Close'].iloc[-1] - long['Entry Price'].iloc[-1]) / long['Entry Price'].iloc[-1]
+            L_TOT += 1
+    if enable_short:
+        S_NP = (short['Total Return'].dropna().iloc[-1] - 1) * 100
+        S_PF = S_GP / abs(S_GL)
+        if np.isnan(short['Return'].iloc[-1]):
+            open_pl += (short['Entry Price'].iloc[-1] - stock['Close'].iloc[-1]) / short['Entry Price'].iloc[-1]
+            S_TOT += 1
+
     
     L_MRU = long['Run-up'].max() * 100
     S_MRU = short['Run-up'].max() * 100
@@ -60,7 +58,6 @@ def print_TV_stats(stock, cumulative, long, short): #No longer passing in cumula
     S_MDD = short['Drawdown'].max() * 100
     C_MDD = max(L_MDD, S_MDD)
     BnH_Return = (stock['Total % Return'].iloc[-1] - 1) * 100
-    #Annualized percentage return and risk
     A_BnH_Return = ((1 + BnH_Return / 100) ** (252 / len(stock)) - 1) * 100
     A_BnH_Risk = stock['% Return'].std() * (252)**(1/2) * 100
     A_C_Return = ((1 + C_NP / 100) ** (252 / len(stock)) - 1) * 100
@@ -69,15 +66,19 @@ def print_TV_stats(stock, cumulative, long, short): #No longer passing in cumula
     A_L_Risk = long['Return'].dropna().std() * (252)**(1/2) * 100
     A_S_Return = ((1 + S_NP / 100) ** (252 / len(stock)) - 1) * 100
     A_S_Risk = short['Return'].dropna().std() * (252)**(1/2) * 100
-    #Annualized Sharpe ratio
-    risk_free_rate = 0.0211
-    A_BnH_SR = (A_BnH_Return / 100 - risk_free_rate) / (A_BnH_Risk / 100)
-    A_C_SR = (A_C_Return / 100 - risk_free_rate) / (A_C_Risk / 100)
-    A_L_SR = (A_L_Return / 100 - risk_free_rate) / (A_L_Risk / 100)
-    A_S_SR = (A_S_Return / 100 - risk_free_rate) / (A_S_Risk / 100)
-    A_C_vs_BnH_SR = (A_C_Return / 100 - A_BnH_Return / 100) / A_C_Risk / 100
-    #sortino ratio
-
+    risk_free_rate = 0.02
+    A_BnH_ShR = (A_BnH_Return / 100 - risk_free_rate) / (A_BnH_Risk / 100)
+    A_C_ShR = (A_C_Return / 100 - risk_free_rate) / (A_C_Risk / 100)
+    A_L_ShR = (A_L_Return / 100 - risk_free_rate) / (A_L_Risk / 100)
+    A_S_ShR = (A_S_Return / 100 - risk_free_rate) / (A_S_Risk / 100)
+    A_BnH_Risk_Down = stock[stock['% Return'] < 0]['% Return'].std() * (252)**(1/2) * 100
+    A_C_Risk_Down = cumulative[cumulative['Return'] < 0]['Return'].dropna().std() * (252)**(1/2) * 100
+    A_L_Risk_Down = long[long['Return'] < 0]['Return'].dropna().std() * (252)**(1/2) * 100
+    A_S_Risk_Down = short[short['Return'] < 0]['Return'].dropna().std() * (252)**(1/2) * 100
+    A_BnH_SoR = (A_BnH_Return / 100 - risk_free_rate) / (A_BnH_Risk_Down / 100)
+    A_C_SoR = (A_C_Return / 100 - risk_free_rate) / (A_C_Risk_Down / 100)
+    A_L_SoR = (A_L_Return / 100 - risk_free_rate) / (A_L_Risk_Down / 100)
+    A_S_SoR = (A_S_Return / 100 - risk_free_rate) / (A_S_Risk_Down / 100)
     #max contracts held
 
 
@@ -129,13 +130,14 @@ def print_TV_stats(stock, cumulative, long, short): #No longer passing in cumula
     table.append(["Gross Loss",f'{C_GL:.2f}%',f'{L_GL:.2f}%',f'{S_GL:.2f}%'])
     table.append(["Max Run-up",f'{C_MRU:.2f}%',f'{L_MRU:.2f}%',f'{S_MRU:.2f}%'])
     table.append(["Max Drawdown",f'{C_MDD:.2f}%',f'{L_MDD:.2f}%',f'{S_MDD:.2f}%'])
-    #table.append(["BnH Return",f'{BnH_Return:.2f}%'])
-    #table.append(["Sharpe Ratio",C_SR,L_SR,S_SR])
-    #Additional stats
     table.append(["BnH Annualized Return, Risk",f'{A_BnH_Return:.2f}%, {A_BnH_Risk:.2f}%'])
-    table.append(["BnH Annualized Sharpe Ratio",f'{A_BnH_SR:.2f}'])
+    table.append(["BnH Annualized Sharpe Ratio",f'{A_BnH_ShR:.2f}'])
     table.append(["Algo Annualized Return, Risk",f'{A_C_Return:.2f}%, {A_C_Risk:.2f}%',f'{A_L_Return:.2f}%, {A_L_Risk:.2f}%',f'{A_S_Return:.2f}%, {A_S_Risk:.2f}%'])
-    table.append(["Algo Annualized Sharpe Ratio", f'{A_C_SR:.4f}',f'{A_L_SR:.4f}',f'{A_S_SR:.4f}'])
+    table.append(["Algo Annualized Sharpe Ratio", f'{A_C_ShR:.4f}',f'{A_L_ShR:.4f}',f'{A_S_ShR:.4f}'])
+    table.append(["BnH Annualized Return, Risk",f'{A_BnH_Return:.2f}%, {A_BnH_Risk_Down:.2f}%'])
+    table.append(["BnH Annualized Sortino Ratio",f'{A_BnH_SoR:.2f}'])
+    table.append(["Algo Annualized Return, Risk",f'{A_C_Return:.2f}%, {A_C_Risk_Down:.2f}%',f'{A_L_Return:.2f}%, {A_L_Risk_Down:.2f}%',f'{A_S_Return:.2f}%, {A_S_Risk_Down:.2f}%'])
+    table.append(["Algo Annualized Sortino Ratio", f'{A_C_SoR:.4f}',f'{A_L_SoR:.4f}',f'{A_S_SoR:.4f}'])
     
     #------------------------
     table.append(["Sortino Ratio"])
@@ -161,8 +163,9 @@ def print_TV_stats(stock, cumulative, long, short): #No longer passing in cumula
     print(tabulate(table, headers = ['Stats','Cumulative','Long','Short'], tablefmt="simple_grid"))
 
 def equity_curve(stock_data, cumulative_return, long_trades, short_trades):
+    _, (ax1, ax2) = plt.subplots(nrows = 2, sharex = True, height_ratios = [2.5, 1])
     #visualizing equity curve (percentage)
-    plt.plot(stock_data.index, stock_data['Total % Return'], label = 'Buy and Hold')
+    ax1.plot(stock_data.index, stock_data['Total % Return'], label = 'Buy and Hold')
 
     #Add initial datapoint so the curves start at 1 on day 0
     cum_date = [stock_data.index[0]] + cumulative_return['Date'].tolist()
@@ -173,20 +176,42 @@ def equity_curve(stock_data, cumulative_return, long_trades, short_trades):
     short_return = [1] + short_trades['Total Return'].tolist()
 
     #Use step because plt.plot will draw a straight line between datapoints
-    plt.step(cum_date, cum_return, label = "Total")
-    plt.step(long_date, long_return, label = 'Long')
-    plt.step(short_date, short_return, label = 'Short')
+    ax1.step(cum_date, cum_return, label = "Total")
+    ax1.step(long_date, long_return, label = 'Long')
+    ax1.step(short_date, short_return, label = 'Short')
 
-    plt.title('Equity curve'), plt.xlabel('Time (Trading days)'), plt.ylabel('Price'), plt.legend()
-    plt.grid(True)
+    ax1.set_title('Equity curve'), ax1.set_ylabel('Price')
+    ax1.legend()
+    ax1.grid(True)
+
+    long_drawdown = [0] + [-e for e in long_trades['Drawdown'].tolist()]
+    ax2.step(long_date, long_drawdown, label = "Drawdown")
+    ax2.set_xlabel('Date'), ax2.set_ylabel('Drawdown')
+    ax2.legend()
+    ax2.grid(True)
+    
+    plt.subplots_adjust(hspace=0)
+    plt.tight_layout()
     plt.show()
+
+def calc_bin(data, formula_num):
+    if formula_num == 1:
+        #Sturges' Formula, assumes normal distribution 
+        return int(math.log(len(data), 2)) + 1
+    if formula_num == 2:
+        #Rice Rule, similar to Sturges' formula but generally results in a larger number of bins
+        return int(len(data) ** 0.5) * 2
+    #Scott's Rule, based on minimizing the integrated mean squared error for the histogram as an estimator of the probability density function
+    bin_width = int((3.5 * np.std(data))/(len(data) ** (1/3)))
+    return int((max(data) - min(data)) / bin_width)
 
 def hist1d_base(data, bin):
     plt.hist(data, bin)
     plt.xlabel('Values'), plt.ylabel('Frequency'), plt.title("Returns Histogram"), plt.grid(True)
     plt.show()
 
-def hist1d_stdev_mu(data,bin):
+def hist1d_stdev_mu(data, formula_num):
+    bin = calc_bin(data, 2)
     # N is the count in each bin, bins is the lower-limit of the bin
     N, bins, patches = plt.hist(data, bins=bin)
     # We'll color code by height, but you could use any scalar
@@ -218,6 +243,7 @@ def hist1d_stdev_mu(data,bin):
     plt.xlabel('Values'), plt.ylabel('Frequency'), plt.title("Returns Histogram"), plt.legend(), plt.grid(True)
     plt.show()
 
-def hist2d_base(data, data1, bin):
+def hist2d_base(data, data1, formula_num):
+    bin = calc_bin(data, 2)
     plt.hist2d(data, data1, bin)
     plt.show()
