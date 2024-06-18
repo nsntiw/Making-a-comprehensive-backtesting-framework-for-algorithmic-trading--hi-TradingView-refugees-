@@ -25,23 +25,23 @@ def check_exit(asset, close, signal, e, is_long):
         if e['TP'] == 0:
             return (signal == -1 or e['SL'] <= close)
         return (signal == -1 or e['TP'] >= close or e['SL'] <= close)
-def exit_trades(asset, date, close, signal, open_trades, is_long):
+def exit_trades(asset, data_feed, close, signal, open_trades, is_long):
     exited_trades = []
     for e in list(open_trades):
         if check_exit(asset, close, signal, e, is_long):
-            exited_trade = open_trades.popleft()
-            returns = calc_returns(exited_trade['P1'], close, is_long)
+            open_trades.remove(e)
+            returns = calc_returns(e['P1'], close, is_long)
             exited_trades.append({
                 'Asset': asset,
-                'Date1': exited_trade['Date1'],
-                'P1': exited_trade['P1'],
-                'TP': exited_trade['TP'],
-                'SL': exited_trade['SL'],
-                'Date2': date,  # Use appropriate date here
+                'Date1': e['Date1'],
+                'P1': e['P1'],
+                'TP': e['TP'],
+                'SL': e['SL'],
+                'Date2': data_feed.index[-1],  # Use appropriate date here
                 'P2': close,
                 'Return': returns,
-                #'Run-up': calc_run_up(close, exited_trade, is_long),
-                #'Drawdown': calc_drawdown(close, exited_trade, is_long)
+                'Run-up': calc_run_up(data_feed, e['Date1'], e['P1'], is_long),
+                'Drawdown': calc_drawdown(data_feed, e['Date1'], e['P1'], is_long),
             })
     return exited_trades
 
@@ -69,44 +69,30 @@ def calc_returns(entry_price, exit_price, is_long):
         return (exit_price - entry_price) / entry_price
     return (entry_price - exit_price) / entry_price
 
-def calc_run_up(data_feed, trades, is_long):
-    entry_date = trades['Date1'].iloc[-1]
-    entry_price = trades['Price1'].iloc[-1]
+def calc_run_up(data_feed, entry_date, entry_price, is_long):
+    #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Current_High - Entry_Price)
     if is_long:
-        #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Current_High - Entry_Price)
-        high = data_feed.loc[entry_date:, 'High'].values
-        return max(high) - entry_price
+        high = data_feed.loc[entry_date:, 'High'].max()
+        return (high - entry_price) / entry_price
+    #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Entry_Price - Current_Low)
     else:
-        #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Entry_Price - Current_Low)
-        low = data_feed.loc[entry_date:, 'Low'].values
-        return entry_price - min(low)
+        low = data_feed.loc[entry_date:, 'Low'].min()
+        return (entry_price - low) / entry_price
 
-def calc_drawdown(data_feed, trades, is_long):
-    entry_date = trades['Date1'].iloc[-1]
-    entry_price = trades['Price1'].iloc[-1]
+def calc_drawdown(data_feed, entry_date, entry_price, is_long):
+    #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Current_High - Entry_Price)
     if is_long:
-        #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Current_High - Entry_Price)
-        low = data_feed.loc[entry_date:, 'Low'].values
-        return entry_price - min(low)
+        low = data_feed.loc[entry_date:, 'Low'].min()
+        return (entry_price - low) / entry_price
+    #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Entry_Price - Current_Low)
     else:
-        #Equity_on_Entry - Min_Equity + Numbers_of_Contracts * (Entry_Price - Current_Low)
-        high = data_feed.loc[entry_date:, 'High'].values
-        return max(high) - entry_price
-
+        high = data_feed.loc[entry_date:, 'High'].max()
+        return (high - entry_price) / entry_price
 
 def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, enable_short):
-    initial_date = stock_data1[0].index[0]
-    initial_price = stock_data1[0]['Close'].iloc[0]
     #Entry Date, Exit Date, Entry Price, Exit Price, Return, Cumulative Return, Run-up, Drawdown
-    #Add initial data for day 0 such that the equity curves start at 1
-    long_trades = pd.DataFrame({'Asset': 0, 'Date1': initial_date,
-                                'P1': initial_price, 'TP' : 0, 'SL': 0,
-                                'Date2': initial_date, 'P2': initial_price,
-                                'Return': 0, 'Run-up': 0, 'Drawdown': 0}, index=[0])
-    short_trades = pd.DataFrame({'Asset': 0, 'Date1': initial_date,
-                                'P1': initial_price, 'TP' : 0, 'SL': 0,
-                                'Date2': initial_date, 'P2': initial_price,
-                                'Return': 0, 'Run-up': 0, 'Drawdown': 0}, index=[0])
+    long_trades = pd.DataFrame(columns=['Asset', 'Date1', 'P1', 'TP', 'SL', 'Date2', 'P2', 'Return', 'Run-up', 'Drawdown'])
+    short_trades = pd.DataFrame(columns=['Asset', 'Date1', 'P1', 'TP', 'SL', 'Date2', 'P2', 'Return', 'Run-up', 'Drawdown'])
     open_long, open_short = [collections.deque() for _ in range(2)]
 
     for i in tqdm(range(1, len(stock_data1[0]) + 1)):
@@ -120,7 +106,7 @@ def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, e
                 if(signal == 0):
                     continue
                 #exit trade
-                temp = pd.DataFrame.from_dict(exit_trades(asset, data_feed.index[-1], close, signal, open_long, True))
+                temp = pd.DataFrame.from_dict(exit_trades(asset, data_feed, close, signal, open_long, True))
                 long_trades = pd.concat([long_trades, temp], ignore_index=True)
                 #enter trade
                 if check_entry(signal, open_long, open_short, True):
