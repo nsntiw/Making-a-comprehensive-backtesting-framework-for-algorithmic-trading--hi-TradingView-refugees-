@@ -10,7 +10,7 @@ def RSI_long(data_feed):
     rsi_overbought = 70
 
     #Calculate RSI
-    rsi = RSI(data_feed, rsi_period)
+    rsi = RSI(data_feed['Close'], rsi_period)
 
     #Return strategy signal
     if rsi < rsi_oversold:
@@ -27,7 +27,7 @@ def RSI_short(data_feed):
     rsi_overbought = 70
     
     #Calculate RSI
-    rsi = RSI(data_feed, rsi_period)
+    rsi = RSI(data_feed['Close'], rsi_period)
 
     #Return strategy signal
     if rsi > rsi_overbought:

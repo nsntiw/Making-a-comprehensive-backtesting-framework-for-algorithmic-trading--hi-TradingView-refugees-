@@ -1,3 +1,4 @@
+from tkinter import E
 from tabulate import tabulate
 import matplotlib.pyplot as plt
 from matplotlib import colors
@@ -31,25 +32,43 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
     C_GL = total[total['Return'] < 0]['Return'].sum() * 100
     L_GL = long[long['Return'] < 0]['Return'].sum() * 100
     S_GL = short[short['Return'] < 0]['Return'].sum() * 100
+    C_NWT = (total['Return'] > 0).sum()
+    L_NWT = (long['Return'] > 0).sum()
+    S_NWT = (short['Return'] > 0).sum()
+    C_NLT = (total['Return'] <= 0).sum()
+    L_NLT = (long['Return'] <= 0).sum()
+    S_NLT = (short['Return'] <= 0).sum()
     C_NP, C_PF, L_NP, L_TOT, L_PF, S_NP, S_TOT, S_PF, open_pl = 0,0,0,0,0,0,0,0,0
-    try:
-        C_NP = (total['Total Return'].dropna().iloc[-1] - 1) * 100
-        C_PF = C_GP / abs(C_GL)
-    except:
-        print('The backtest produced no trades')
+    C_TCT, L_TCT, S_TCT = 0, 0, 0
+    C_PP,L_PP,S_PP  = 0, 0, 0
+    C_AT,L_AT,S_AT = 0, 0, 0
     if enable_long:
         L_NP = (long['Total Return'].dropna().iloc[-1] - 1) * 100
         L_PF = L_GP / abs(L_GL)
         if np.isnan(long['Return'].iloc[-1]):#refactor into loop
             open_pl += (stock['Close'].iloc[-1] - long['P1'].iloc[-1]) / long['P1'].iloc[-1]
             L_TOT += 1
+        L_TCT = len(long) - L_TOT
+        L_AT = L_NP / L_TCT
+        L_PP = L_NWT / L_TCT * 100
     if enable_short:
         S_NP = (short['Total Return'].dropna().iloc[-1] - 1) * 100
         S_PF = S_GP / abs(S_GL)
         if np.isnan(short['Return'].iloc[-1]):
             open_pl += (short['P1'].iloc[-1] - stock['Close'].iloc[-1]) / short['P1'].iloc[-1]
             S_TOT += 1
-
+        S_TCT = len(short) - S_TOT
+        S_AT = S_NP / S_TCT
+        S_PP = S_NWT / S_TCT * 100
+    try:
+        C_NP = (total['Total Return'].dropna().iloc[-1] - 1) * 100
+        C_PF = C_GP / abs(C_GL)
+        C_TOT = L_TOT + S_TOT
+        C_TCT = len(total) - C_TOT
+        C_AT = C_NP / C_TCT
+        C_PP = C_NWT / C_TCT * 100
+    except:
+        print('The backtest produced no trades')
     
     L_MRU = long['Run-up'].max() * 100
     S_MRU = short['Run-up'].max() * 100
@@ -80,25 +99,11 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
     A_L_SoR = (A_L_Return / 100 - risk_free_rate) / (A_L_Risk_Down / 100)
     A_S_SoR = (A_S_Return / 100 - risk_free_rate) / (A_S_Risk_Down / 100)
     #max contracts held
-
-
-    C_TOT = L_TOT + S_TOT
-    C_TCT = len(total) - C_TOT - 2
-    L_TCT = len(long) - L_TOT - 1
-    S_TCT = len(short) - S_TOT - 1
-    C_AT = C_NP / C_TCT 
-    L_AT = L_NP / L_TCT
-    S_AT = S_NP / S_TCT
+    
     #commission paid
-    C_NWT = (total['Return'] > 0).sum()
-    L_NWT = (long['Return'] > 0).sum()
-    S_NWT = (short['Return'] > 0).sum()
-    C_NLT = (total['Return'] <= 0).sum()
-    L_NLT = (long['Return'] <= 0).sum()
-    S_NLT = (short['Return'] <= 0).sum()
-    C_PP = C_NWT / C_TCT * 100
-    L_PP = L_NWT / L_TCT * 100
-    S_PP = S_NWT / S_TCT * 100
+
+    
+    
     C_AWT = C_GP /C_NWT
     L_AWT = L_GP /L_NWT
     S_AWT = S_GP /S_NWT
@@ -140,7 +145,6 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
     table.append(["Algo Annualized Sortino Ratio", f'{A_C_SoR:.4f}',f'{A_L_SoR:.4f}',f'{A_S_SoR:.4f}'])
     
     #------------------------
-    table.append(["Sortino Ratio"])
     table.append(["Profit Factor",f'{C_PF:.2f}',f'{L_PF:.2f}',f'{S_PF:.2f}'])
     table.append(["Max Contracts Held"])
     table.append(["Open PL", f'{open_pl:.2f}%'])
@@ -247,4 +251,28 @@ def hist1d_stdev_mu(data, formula_num):
 def hist2d_base(data, data1, formula_num):
     bin = calc_bin(data, formula_num)
     plt.hist2d(data, data1, bin)
+    plt.show()
+
+def montecarlo_equity_curve(montecarlo_results):
+    final_values = []
+    equity_curve = []
+    for e in montecarlo_results:
+        equity_curve.append(np.cumprod(1 + e))
+        final_values.append(equity_curve[-1][-1])
+    min_index = np.argmin(final_values)
+    #floating point problem with directly indexing the medium
+    mid_index = np.argmin(np.abs(np.array(final_values) - np.median(final_values)))
+    max_index = np.argmax(final_values)
+    
+    for i, e in enumerate(equity_curve):
+        if i == min_index:
+            plt.plot(e, color='red', linewidth=1,zorder=10)
+        elif i == max_index:
+            plt.plot(e, color='green', linewidth=1,zorder=10)
+        elif i == mid_index:
+            plt.plot(e, color='yellow', linewidth=1,zorder=10)
+        else:
+            plt.plot(e, color='gray', linewidth=1,zorder=0)
+    plt.xlabel('Trade #'), plt.ylabel('Equity')
+    plt.grid(True)
     plt.show()
