@@ -3,13 +3,15 @@ import yfinance as yf
 import pandas as pd
 
 def get_stock_data(stock_name, starting_date, ending_date):
-    #print all files in the folder "Stock_data"
-    path = os.path.dirname(os.path.realpath(__file__)) + "/Stock_data/"
+    #Construct the path to the Stock_data folder
+    main_script_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+    stock_data_path = os.path.join(main_script_path, 'Stock_data')
+    #Print all files in the folder "Stock_data"
     print("Stock Data Downloaded:")
-    [print(e) for e in os.listdir(path)]
+    [print(e) for e in os.listdir(stock_data_path)]
 
     #read or download and save
-    name = f'{path}{stock_name}.csv'
+    name = os.path.join(stock_data_path, f'{stock_name}.csv')
     try:
         stock_data = pd.read_csv(name, index_col='Date', parse_dates=True)
         stock_data = stock_data[starting_date:ending_date]
