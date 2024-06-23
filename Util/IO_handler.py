@@ -2,7 +2,7 @@ import os
 import yfinance as yf
 import pandas as pd
 
-def get_stock_data(stock_name, starting_date, ending_date):
+def get_stock_data(stock_name, starting_date, ending_date, interval):
     #Construct the path to the Stock_data folder
     main_script_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
     stock_data_path = os.path.join(main_script_path, 'Stock_data')
@@ -18,7 +18,7 @@ def get_stock_data(stock_name, starting_date, ending_date):
         print("Read")
         return stock_data
     except:
-        stock_data = yf.download(stock_name, starting_date, ending_date)
+        stock_data = yf.download(stock_name, starting_date, ending_date, interval = interval)
         stock_data.to_csv(path_or_buf = name)
         print("Downloaded")
         return stock_data
