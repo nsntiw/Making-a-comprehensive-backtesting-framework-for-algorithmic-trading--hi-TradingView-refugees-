@@ -42,6 +42,9 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
     C_TCT, L_TCT, S_TCT = 0, 0, 0
     C_PP,L_PP,S_PP  = 0, 0, 0
     C_AT,L_AT,S_AT = 0, 0, 0
+    L_ANBIT, L_ANBIWT, L_ANBILT = 0, 0, 0
+    S_ANBIT, S_ANBIWT, S_ANBILT = 0, 0, 0
+    C_ANBIT, C_ANBIWT, S_ANBILT = 0, 0, 0
     if enable_long:
         L_NP = (long['Total Return'].dropna().iloc[-1] - 1) * 100
         L_PF = L_GP / abs(L_GL)
@@ -51,6 +54,9 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
         L_TCT = len(long) - L_TOT
         L_AT = L_NP / L_TCT
         L_PP = L_NWT / L_TCT * 100
+        L_ANBIT = long['Length'].sum() / len(long)
+        L_ANBIWT = long[long['Return'] > 0]['Length'].sum() / len(total[total['Return'] > 0])
+        L_ANBILT = long[long['Return'] < 0]['Length'].sum() / len(long[long['Return'] < 0])
     if enable_short:
         S_NP = (short['Total Return'].dropna().iloc[-1] - 1) * 100
         S_PF = S_GP / abs(S_GL)
@@ -60,6 +66,9 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
         S_TCT = len(short) - S_TOT
         S_AT = S_NP / S_TCT
         S_PP = S_NWT / S_TCT * 100
+        S_ANBIT = short['Length'].sum() / len(short)
+        S_ANBIWT = short[short['Return'] > 0]['Length'].sum() / len(short[short['Return'] > 0])
+        S_ANBILT = short[short['Return'] < 0]['Length'].sum() / len(short[short['Return'] < 0])
     try:
         C_NP = (total['Total Return'].dropna().iloc[-1] - 1) * 100
         C_PF = C_GP / abs(C_GL)
@@ -67,6 +76,9 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
         C_TCT = len(total) - C_TOT
         C_AT = C_NP / C_TCT
         C_PP = C_NWT / C_TCT * 100
+        C_ANBIT = total['Length'].sum() / len(total)
+        C_ANBIWT = total[total['Return'] > 0]['Length'].sum() / len(total[total['Return'] > 0])
+        C_ANBILT = total[total['Return'] < 0]['Length'].sum() / len(total[total['Return'] < 0])
     except:
         print('The backtest produced no trades')
     
@@ -102,8 +114,6 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
     
     #commission paid
 
-    
-    
     C_AWT = C_GP /C_NWT
     L_AWT = L_GP /L_NWT
     S_AWT = S_GP /S_NWT
@@ -113,21 +123,12 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
     C_RAWAL = C_AWT / abs(C_ALT)
     L_RAWAL = L_AWT / abs(L_ALT)
     S_RAWAL = S_AWT / abs(S_ALT)
-    C_LWT = total['Return'].max() * 10
+    C_LWT = total['Return'].max() * 100
     L_LWT = long['Return'].max() * 100
     S_LWT = short['Return'].max() * 100
     C_LLT = total['Return'].min() * 100
     L_LLT = long['Return'].min() * 100
     S_LLT = short['Return'].min() * 100
-    C_ANBIT = 0
-    L_ANBIT = 0
-    S_ANBIT = 0
-    C_ANBIWT = 0
-    L_ANBIWT = 0
-    S_ANBIWT = 0
-    C_ANBILT = 0
-    L_ANBILT = 0
-    S_ANBILT = 0
 
     table = []
     table.append(["Net Profit",f'{C_NP:.2f}%',f'{L_NP:.2f}%',f'{S_NP:.2f}%'])
@@ -160,9 +161,9 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
     table.append(["Ratio Avg Win / Avg Loss",f'{C_RAWAL:.2f}',f'{L_RAWAL:.2f}',f'{S_RAWAL:.2f}'])
     table.append(["Largest Winning Trade",f'{C_LWT:.2f}%',f'{L_LWT:.2f}%',f'{S_LWT:.2f}%'])
     table.append(["Largest Losing Trade",f'{C_LLT:.2f}%',f'{L_LLT:.2f}%',f'{S_LLT:.2f}%'])
-    table.append(["Avg # Bars in Trades"])
-    table.append(["Avg # Bars in Winning Trades"])
-    table.append(["Avg # Bars in Losing Trades"])
+    table.append(["Avg # Bars in Trades", f'{C_ANBIT:.2f}', f'{L_ANBIT:.2f}', f'{S_ANBIT:.2f}'])
+    table.append(["Avg # Bars in Winning Trades", f'{C_ANBIWT:.2f}', f'{L_ANBIWT:.2f}', f'{S_ANBIWT:.2f}'])
+    table.append(["Avg # Bars in Losing Trades", f'{C_ANBILT:.2f}', f'{L_ANBILT:.2f}', f'{S_ANBILT:.2f}'])
     table.append(["Margin Calls"])
     print(tabulate(table, headers = ['Stats','Cumulative','Long','Short'], tablefmt="simple_grid"))
 

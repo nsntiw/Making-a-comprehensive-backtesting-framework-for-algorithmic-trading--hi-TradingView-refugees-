@@ -53,7 +53,9 @@ def RSI(data_feed, rsi_period):
     rsi = 100 - 100 / (1 + rs)
     return rsi
 
-def MACD(data_feed, short_ma_length, long_ma_length, signal_length): 
+def MACD(data_feed, short_ma_length, long_ma_length, signal_length):
+    if len(data_feed) < long_ma_length:
+        return np.nan, np.nan
     close_prices = data_feed.tail(long_ma_length + signal_length)#works
     #Calculate short and long simple moving averages
     short_ema = close_prices.ewm(span=short_ma_length, adjust=False, min_periods = short_ma_length).mean()
@@ -81,3 +83,43 @@ def ATR(data_feed, length):
     
     return atr.iloc[-1]
 
+def ADX(data_feed, length):
+    if len(data_feed) < length + 1:
+        return np.nan
+
+    # Convert columns to numpy arrays for efficiency
+    high = data_feed['High'].values
+    low = data_feed['Low'].values
+    close = data_feed['Close'].values
+
+    # Calculate True Range (TR)
+    tr1 = high - low
+    tr2 = np.abs(high - np.roll(close, 1))
+    tr3 = np.abs(low - np.roll(close, 1))
+    TR = np.maximum(tr1, np.maximum(tr2, tr3))
+    TR[0] = np.nan  # The first TR value will be invalid due to np.roll
+
+    # Calculate Directional Movement (DM)
+    up_move = high - np.roll(high, 1)
+    down_move = np.roll(low, 1) - low
+
+    DM_plus = np.where((up_move > down_move) & (up_move > 0), up_move, 0)
+    DM_minus = np.where((down_move > up_move) & (down_move > 0), down_move, 0)
+    DM_plus[0] = DM_minus[0] = np.nan  # The first DM values will be invalid due to np.roll
+
+    # Calculate Smoothed True Range (ATR)
+    ATR = pd.Series(TR).rolling(window=length).mean().values
+
+    # Calculate Smoothed +DI and -DI
+    DI_plus = 100 * (pd.Series(DM_plus).rolling(window=length).mean().values / ATR)
+    DI_minus = 100 * (pd.Series(DM_minus).rolling(window=length).mean().values / ATR)
+
+    # Calculate DX (Directional Movement Index)
+    DX = 100 * (np.abs(DI_plus - DI_minus) / (DI_plus + DI_minus))
+
+    # Calculate ADX (Average Directional Index)
+    ADX = pd.Series(DX).rolling(window=length).mean().values
+
+    # Return the latest ADX value
+    current_adx = ADX[-1]
+    return current_adx

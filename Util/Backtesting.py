@@ -42,6 +42,7 @@ def exit_trades(asset, data_feed, close, signal, open_trades, is_long):
                 'Return': returns,
                 'Run-up': calc_run_up(data_feed, e['Date1'], e['P1'], is_long),
                 'Drawdown': calc_drawdown(data_feed, e['Date1'], e['P1'], is_long),
+                'Length': (data_feed.index[-1] - e['Date1']).days
             })
     return exited_trades
 
@@ -49,7 +50,6 @@ def check_entry(signal, open_long, open_short, is_long):
     if is_long:
         return signal == 1 and len(open_long) + len(open_short) == 0
     return signal == 1 and len(open_short) + len(open_long) == 0
-
 def enter_trades(asset, date, close, take_profit, stop_loss, open_long, open_short, is_long):
     if is_long:
         open_long.append({'Asset': asset,
@@ -91,8 +91,8 @@ def calc_drawdown(data_feed, entry_date, entry_price, is_long):
 
 def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, enable_short):
     #Entry Date, Exit Date, Entry Price, Exit Price, Return, Cumulative Return, Run-up, Drawdown
-    long_trades = pd.DataFrame(columns=['Asset', 'Date1', 'P1', 'TP', 'SL', 'Date2', 'P2', 'Return', 'Run-up', 'Drawdown'])
-    short_trades = pd.DataFrame(columns=['Asset', 'Date1', 'P1', 'TP', 'SL', 'Date2', 'P2', 'Return', 'Run-up', 'Drawdown'])
+    long_trades = pd.DataFrame(columns=['Asset', 'Date1', 'P1', 'TP', 'SL', 'Date2', 'P2', 'Return', 'Run-up', 'Drawdown', 'Length'])
+    short_trades = pd.DataFrame(columns=['Asset', 'Date1', 'P1', 'TP', 'SL', 'Date2', 'P2', 'Return', 'Run-up', 'Drawdown', 'Length'])
     open_long, open_short = [collections.deque() for _ in range(2)]
 
     for i in tqdm(range(1, len(stock_data1[0]) + 1)):
@@ -133,7 +133,7 @@ def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, e
     long_trades['Total Return'] = np.cumprod(1 + long_trades['Return'])
     short_trades['Total Return'] = np.cumprod(1 + short_trades['Return'])
     #Get cumulative returns by concatenating long_trades and short_trades
-    total_return = pd.concat([long_trades[['Date2', 'Return']], short_trades[['Date2', 'Return']]])
+    total_return = pd.concat([long_trades[['Date2', 'Return', 'Length']], short_trades[['Date2', 'Return', 'Length']]])
     total_return = total_return.rename(columns={'Date2': 'Date'})
     #Sort by date first
     total_return.sort_values('Date', inplace=True)

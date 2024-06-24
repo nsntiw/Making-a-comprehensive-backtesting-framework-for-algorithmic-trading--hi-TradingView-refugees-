@@ -1,6 +1,6 @@
 #importing packages
 import os
-term_size = os.get_terminal_size()
+term_size = os.get_terminal_size() #To print linebreaks
 import numpy as np
 import pandas as pd
 
@@ -13,26 +13,15 @@ import Util.MonteCarlo as MonteCarlo
 #Download or read downloaded stock data csv files
 stock_input = []
 #Interval: [1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo]
-#NEDL_MACD
-#stock_input.append({'name': 'XOM', 'starting_date': '2016-01-01', 'ending_date': '2021-03-18', 'interval': '1d'})
-#NEDL_RSI
-#stock_input.append({'name': 'KO', 'starting_date': '2016-01-01', 'ending_date': '2021-03-21', 'interval': '1d'})
-#TR_MACD
+#stock_input.append({'name': 'SPY', 'starting_date': '2001-12-30', 'ending_date': '2021-03-18', 'interval': '1d'})
 stock_input.append({'name': 'EURJPY=X', 'starting_date': '2002-07-01', 'ending_date': '2024-02-05', 'interval': '1d'})
-#CriticalTrading_Breakout, CriticalTrading_Seasonality, FMZ_Seasonality
-#stock_input.append({'name': 'SPY', 'starting_date': '2007-12-30', 'ending_date': '2021-03-18', 'interval': '1d'})
-#CriticalTrading_Seasonality
-#stock_input.append({'name': 'TLT', 'starting_date': '2007-12-30', 'ending_date': '2021-03-18', 'interval': '1d'})
-
-#stock_input.append({'name': 'BTC-USD', 'starting_date': '2018-12-30', 'ending_date': '2024-03-18', 'interval': '1d'})
-
 print('-' * term_size.columns)
 stock_data = [IO_handler.get_stock_data(e['name'], e['starting_date'], e['ending_date'], e['interval']) for e in stock_input]
 
 #--------------------------------------
 #specifying backtesting parameters
 fee = 0.0005 #implement
-enable_long, enable_short = True, True
+enable_long, enable_short = True, False
 pyramiding_num_trades = 0
 
 #--------------------------------------
@@ -49,21 +38,13 @@ for e1, e2 in zip(stock_input, stock_data):
     print(f'Stock Data for {e1['name']}:'), Plotting_Printing.print_df(e2)
 #--------------------------------------
 strategy_long, strategy_short = [], []
-#from Strategy.NEDL_MACD import MACD_long, MACD_short
-#strategy_long.append(MACD_long), strategy_short.append(MACD_short)
-#from Strategy.NEDL_RSI import RSI_long, RSI_short
-#strategy_long.append(RSI_long), strategy_short.append(RSI_short)
-from Strategy.TR_MACD_high_low import MACD_long, MACD_short
-strategy_long.append(MACD_long), strategy_short.append(MACD_short)
-#from Strategy.CriticalTrading_Breakout import Breakout_long, Breakout_short
-#strategy_long.append(Breakout_long), strategy_short.append(Breakout_short)
-#from Strategy.CriticalTrading_Seasonality import SPY_seasonality_long, SPY_seasonality_short, TLT_seasonality_long, TLT_seasonality_short
-#strategy_long.append(SPY_seasonality_long), strategy_short.append(SPY_seasonality_short)
-#strategy_long.append(TLT_seasonality_long), strategy_short.append(TLT_seasonality_short)
-#from Strategy.Larry_Connors_RSI2 import RSI_long, RSI_short
-#strategy_long.append(RSI_long), strategy_short.append(RSI_short)
-#from Strategy.FMZ_DualSMA import DualSMA_long, DualSMA_long
-#strategy_long.append(DualSMA_long), strategy_short.append(DualSMA_long)
+#from Strategy.QuantifiedStrategies_RSI2_ADX import RSI_short, RSI_short
+#strategy_long.append(RSI_short), strategy_short.append(RSI_short)
+#from Strategy.QuantifiedStrategies_NR7 import NR7_long, NR7_short
+#strategy_long.append(NR7_long), strategy_short.append(NR7_short)
+
+from Strategy.QuantStratTradeR_GARCH import GARCH_long
+strategy_long.append(GARCH_long), strategy_short.append(GARCH_long)
 #--------------------------------------
 #Generate trades
 print('-' * term_size.columns)
@@ -120,4 +101,5 @@ for e in montecarlo_results:
     equity_curve = np.cumprod(1 + e)
     annualized_return.append(equity_curve[-1])
     #implement annulalisation
+
 Plotting_Printing.hist1d_stdev_mu(annualized_return, 2)

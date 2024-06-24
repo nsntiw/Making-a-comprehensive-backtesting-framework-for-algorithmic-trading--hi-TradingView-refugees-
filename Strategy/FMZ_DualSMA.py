@@ -1,7 +1,6 @@
 #https://medium.com/@FMZQuant/dual-moving-average-pressure-rebound-strategy-fa1170f9d8a2
 from Strategy.Library import RSI, SMA
 
-
 def DualSMA_long(data_feed):
     #SMA parameters
     short_ma_length, long_ma_length = 10, 200
