@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 from arch import arch_model
 from Strategy.Library import MACD

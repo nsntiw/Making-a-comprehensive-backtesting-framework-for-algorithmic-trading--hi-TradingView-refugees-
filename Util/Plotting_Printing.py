@@ -55,8 +55,14 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
         L_AT = L_NP / L_TCT
         L_PP = L_NWT / L_TCT * 100
         L_ANBIT = long['Length'].sum() / len(long)
-        L_ANBIWT = long[long['Return'] > 0]['Length'].sum() / len(total[total['Return'] > 0])
-        L_ANBILT = long[long['Return'] < 0]['Length'].sum() / len(long[long['Return'] < 0])
+        try:
+            L_ANBIWT = long[long['Return'] > 0]['Length'].sum() / len(total[total['Return'] > 0])
+        except:
+            pass
+        try:
+            L_ANBILT = long[long['Return'] < 0]['Length'].sum() / len(long[long['Return'] < 0])
+        except:
+            pass
     if enable_short:
         S_NP = (short['Total Return'].dropna().iloc[-1] - 1) * 100
         S_PF = S_GP / abs(S_GL)
@@ -67,8 +73,14 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
         S_AT = S_NP / S_TCT
         S_PP = S_NWT / S_TCT * 100
         S_ANBIT = short['Length'].sum() / len(short)
-        S_ANBIWT = short[short['Return'] > 0]['Length'].sum() / len(short[short['Return'] > 0])
-        S_ANBILT = short[short['Return'] < 0]['Length'].sum() / len(short[short['Return'] < 0])
+        try:
+            S_ANBIWT = short[short['Return'] > 0]['Length'].sum() / len(short[short['Return'] > 0])
+        except:
+            pass
+        try:
+            S_ANBILT = short[short['Return'] < 0]['Length'].sum() / len(short[short['Return'] < 0])
+        except:
+            pass
     try:
         C_NP = (total['Total Return'].dropna().iloc[-1] - 1) * 100
         C_PF = C_GP / abs(C_GL)
