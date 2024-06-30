@@ -1,5 +1,10 @@
 from ta.momentum import RSIIndicator
 from Strategy.Library import ATR, EMA
+#GOOGL setting  5 , close, 3 , 1  profitLevel at 75 shows win rate  87.21 %  profit factor 7.059
+#GOOGL setting  8 , close, 3 , 1  profitLevel at 80 shows win rate  86.57 %  profit factor 18.96 
+#SPY setting    5, close , 3, 3  profitLevel at 70  , shows win rate 80.34%  profit factor 2.348
+
+#
 
 def calculate_rsi(close_prices, period):
     rsi_indicator = RSIIndicator(close=close_prices, window=period)
@@ -25,7 +30,6 @@ def find_pivot_high(data_feed, left_lookback, right_lookback):
             return pivot_indexes
     return pivot_indexes
 
-# Example usage
 def RSI_Div_Long(data_feed):
     #Parameters
     rsi_length = 9
