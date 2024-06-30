@@ -1,6 +1,5 @@
-#https://youtu.be/dfT6rnkJCms?si=eHZWQoDF46QAwftp
-import numpy as np
-import pandas as pd
+#https://medium.com/@FMZQuant/larry-connors-rsi2-mean-reversion-strategy-861f5a3579e3
+
 from Strategy.Library import RSI, SMA
 
 def RSI_long(data_feed):

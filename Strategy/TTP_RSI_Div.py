@@ -1,7 +1,7 @@
 from ta.momentum import RSIIndicator
 from Strategy.Library import ATR, EMA
-#GOOGL setting  5 , close, 3 , 1  profitLevel at 75 shows win rate  87.21 %  profit factor 7.059
-#GOOGL setting  8 , close, 3 , 1  profitLevel at 80 shows win rate  86.57 %  profit factor 18.96 
+#GOOGL setting  5, close, 3 , 1  profitLevel at 75 shows win rate  87.21 %  profit factor 7.059
+#GOOGL setting  8, close, 3 , 1  profitLevel at 80 shows win rate  86.57 %  profit factor 18.96 
 #SPY setting    5, close , 3, 3  profitLevel at 70  , shows win rate 80.34%  profit factor 2.348
 
 #

@@ -1,3 +1,5 @@
+#https://www.quantifiedstrategies.com/nr7-trading-strategy/
+
 def NR7_long(data_feed):
     if len(data_feed) < 7:
         return 0, 0, 0

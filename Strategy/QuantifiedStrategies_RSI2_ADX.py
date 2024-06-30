@@ -1,3 +1,5 @@
+#https://www.pinterest.com/pin/895723813376697782/
+
 from Strategy.Library import RSI, ADX
 
 def RSI_long(data_feed):

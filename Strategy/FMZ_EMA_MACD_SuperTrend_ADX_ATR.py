@@ -1,4 +1,5 @@
-import signal
+#https://medium.com/@FMZQuant/ema-macd-supertrend-adx-atr-multi-indicator-trading-signal-strategy-9a6569b1f04d
+
 from Strategy.Library import EMA, MACD
 
 def EMA_MACD_SuperTrend_ADX_long(data_feed):

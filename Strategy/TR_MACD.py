@@ -1,6 +1,3 @@
-#https://medium.com/@FMZQuant/ema-macd-supertrend-adx-atr-multi-indicator-trading-signal-strategy-9a6569b1f04d
-import numpy as np
-import pandas as pd
 from Strategy.Library import MACD, EMA
 
 def MACD_long(data_feed):

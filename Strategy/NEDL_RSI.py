@@ -1,6 +1,4 @@
 #https://youtu.be/dfT6rnkJCms?si=eHZWQoDF46QAwftp
-import numpy as np
-import pandas as pd
 from Strategy.Library import RSI
 
 def RSI_long(data_feed):
