@@ -37,7 +37,7 @@ def RSI_short(data_feed):
     SMA_filter = SMA(data_feed['Close'], SMA_length)
 
     #Return strategy signal
-    #if (rsi < rsi_overbought and rsi > rsi_overbought) and data_feed['Close'].iloc[-1] < SMA_filter:
+    #if (rsi < rsi_overbought and rsi_prev > rsi_overbought) and data_feed['Close'].iloc[-1] < SMA_filter:
     if  rsi > rsi_overbought and data_feed['Close'].iloc[-1] < SMA_filter:
         return 1, 0, 0
     if rsi < rsi_oversold:

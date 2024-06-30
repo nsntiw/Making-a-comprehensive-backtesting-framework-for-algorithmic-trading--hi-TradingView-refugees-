@@ -1,10 +1,11 @@
-from ta.momentum import RSIIndicator
-from Strategy.Library import ATR, EMA
+#https://youtu.be/wy_Nv8JSg6Y?si=AdkRoZYmFuAQ9_Lt
+#https://www.tradingview.com/script/qSLcZSyw-RSI-Divergence-Indicator-strategy/
 #GOOGL setting  5, close, 3 , 1  profitLevel at 75 shows win rate  87.21 %  profit factor 7.059
 #GOOGL setting  8, close, 3 , 1  profitLevel at 80 shows win rate  86.57 %  profit factor 18.96 
 #SPY setting    5, close , 3, 3  profitLevel at 70  , shows win rate 80.34%  profit factor 2.348
 
-#
+from ta.momentum import RSIIndicator
+from Strategy.Library import ATR, EMA
 
 def calculate_rsi(close_prices, period):
     rsi_indicator = RSIIndicator(close=close_prices, window=period)
