@@ -1,5 +1,5 @@
 from ta.momentum import RSIIndicator
-from Strategy.Library import ATR, SMA
+from Strategy.Library import ATR, EMA
 
 def calculate_rsi(close_prices, period):
     rsi_indicator = RSIIndicator(close=close_prices, window=period)
@@ -28,47 +28,47 @@ def find_pivot_high(data_feed, left_lookback, right_lookback):
 # Example usage
 def RSI_Div_Long(data_feed):
     #Parameters
-    rsiPeriod = 9
-    pivotLookbackRight = 3
-    pivotLookbackLeft = 1
-    takeProfitRSILevel = 80
+    rsi_length = 9
+    pivot_lookback_r = 3
+    pivot_lookback_l = 1
+    rsi_TP = 80
 
     #maxLookback = 60
     minLookback = 0
     
     #Calculate RSI
-    rsi = calculate_rsi(data_feed['Close'].tail(30), rsiPeriod)
-    pivot_low = find_pivot_low(rsi, pivotLookbackLeft, pivotLookbackRight)
-    pivot_high = find_pivot_high(rsi, pivotLookbackLeft, pivotLookbackRight)
+    rsi = calculate_rsi(data_feed['Close'].tail(30), rsi_length)
+    pivot_low = find_pivot_low(rsi, pivot_lookback_l, pivot_lookback_r)
+    pivot_high = find_pivot_high(rsi, pivot_lookback_l, pivot_lookback_r)
     
-    #Shift based on minLookback
     if len(pivot_low) < 2 or len(pivot_high) < 2:
         return 0, 0, 0
     #Regular bullish
-    rsiHL = rsi.iloc[-pivotLookbackRight] > rsi.iloc[pivot_low[1]]
-    priceLL = data_feed['Low'].iloc[-pivotLookbackRight] < data_feed['Low'].iloc[pivot_low[1]]
-    bullCond = priceLL and rsiHL and pivot_low[0] == -pivotLookbackRight - 2
+    rsiHL = rsi.iloc[-pivot_lookback_r] > rsi.iloc[pivot_low[1]]
+    priceLL = data_feed['Low'].iloc[-pivot_lookback_r] < data_feed['Low'].iloc[pivot_low[1]]
+    bullCond = priceLL and rsiHL and pivot_low[0] == -pivot_lookback_r - 2
     #Hidden bullish
-    rsiHL = rsi.iloc[-pivotLookbackRight] < rsi.iloc[pivot_low[1]]
-    priceLL = data_feed['Low'].iloc[-pivotLookbackRight] > data_feed['Low'].iloc[pivot_low[1]]
-    hiddenBullCond = rsiHL and priceLL and pivot_low[0] == -pivotLookbackRight - 2
+    rsiHL = rsi.iloc[-pivot_lookback_r] < rsi.iloc[pivot_low[1]]
+    priceLL = data_feed['Low'].iloc[-pivot_lookback_r] > data_feed['Low'].iloc[pivot_low[1]]
+    hiddenBullCond = rsiHL and priceLL and pivot_low[0] == -pivot_lookback_r - 2
 
-    #Breaish
-    rsiLH = rsi.iloc[-pivotLookbackRight] < rsi.iloc[pivot_high[1]]
-    priceHH = data_feed['High'].iloc[-pivotLookbackRight] < data_feed['High'].iloc[pivot_high[1]]
-    bearCond = rsiLH and priceHH and pivot_high[0] == -pivotLookbackRight - 2
+    #Regular breaish
+    rsiLH = rsi.iloc[-pivot_lookback_r] < rsi.iloc[pivot_high[1]]
+    priceHH = data_feed['High'].iloc[-pivot_lookback_r] > data_feed['High'].iloc[pivot_high[1]]
+    bearCond = rsiLH and priceHH and pivot_high[0] == -pivot_lookback_r - 2
 
     #Hidden bearish
-    rsiHH = rsi.iloc[-pivotLookbackRight] > rsi.iloc[pivot_high[1]]
-    priceLH = data_feed['High'].iloc[-pivotLookbackRight] < data_feed['High'].iloc[pivot_high[1]]
-    hiddenBearCond = rsiHH and priceLH and pivot_high[0] == -pivotLookbackRight - 2
+    rsiHH = rsi.iloc[-pivot_lookback_r] > rsi.iloc[pivot_high[1]]
+    priceLH = data_feed['High'].iloc[-pivot_lookback_r] < data_feed['High'].iloc[pivot_high[1]]
+    hiddenBearCond = rsiHH and priceLH and pivot_high[0] == -pivot_lookback_r - 2
+
 
     #stop loss
     #SL = data_feed['Close'].iloc[-1] * ATR(data_feed, 14)
-    
+    # and data_feed['Close'].iloc[-1] > EMA(data_feed['Close'], 50)
     if (bullCond or hiddenBullCond):
         return 1, 0, 0
-    if rsi.iloc[-1] > takeProfitRSILevel or bearCond:
+    if rsi.iloc[-1] > rsi_TP or bearCond:
         return -1, 0, 0
     return 0, 0, 0
 
