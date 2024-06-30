@@ -1,5 +1,3 @@
-import pandas as pd
-import numpy as np
 from ta.momentum import RSIIndicator
 from Strategy.Library import ATR, SMA
 
@@ -39,7 +37,7 @@ def RSI_Div_Long(data_feed):
     minLookback = 0
     
     #Calculate RSI
-    rsi = calculate_rsi(data_feed['Close'].tail(50), rsiPeriod)
+    rsi = calculate_rsi(data_feed['Close'].tail(30), rsiPeriod)
     pivot_low = find_pivot_low(rsi, pivotLookbackLeft, pivotLookbackRight)
     pivot_high = find_pivot_high(rsi, pivotLookbackLeft, pivotLookbackRight)
     
@@ -49,21 +47,21 @@ def RSI_Div_Long(data_feed):
     #Regular bullish
     rsiHL = rsi.iloc[-pivotLookbackRight] > rsi.iloc[pivot_low[1]]
     priceLL = data_feed['Low'].iloc[-pivotLookbackRight] < data_feed['Low'].iloc[pivot_low[1]]
-    bullCond = priceLL and rsiHL or pivot_low[0] != -pivotLookbackRight - 2
+    bullCond = priceLL and rsiHL and pivot_low[0] == -pivotLookbackRight - 2
     #Hidden bullish
     rsiHL = rsi.iloc[-pivotLookbackRight] < rsi.iloc[pivot_low[1]]
     priceLL = data_feed['Low'].iloc[-pivotLookbackRight] > data_feed['Low'].iloc[pivot_low[1]]
-    hiddenBullCond = rsiHL and priceLL or pivot_low[0] != -pivotLookbackRight - 2
+    hiddenBullCond = rsiHL and priceLL and pivot_low[0] == -pivotLookbackRight - 2
 
     #Breaish
     rsiLH = rsi.iloc[-pivotLookbackRight] < rsi.iloc[pivot_high[1]]
     priceHH = data_feed['High'].iloc[-pivotLookbackRight] < data_feed['High'].iloc[pivot_high[1]]
-    bearCond = rsiLH and priceHH or pivot_high[0] != -pivotLookbackRight - 2
+    bearCond = rsiLH and priceHH and pivot_high[0] == -pivotLookbackRight - 2
 
     #Hidden bearish
     rsiHH = rsi.iloc[-pivotLookbackRight] > rsi.iloc[pivot_high[1]]
     priceLH = data_feed['High'].iloc[-pivotLookbackRight] < data_feed['High'].iloc[pivot_high[1]]
-    hiddenBearCond = rsiHH and priceLH or pivot_high[0] != -pivotLookbackRight - 2
+    hiddenBearCond = rsiHH and priceLH and pivot_high[0] == -pivotLookbackRight - 2
 
     #stop loss
     #SL = data_feed['Close'].iloc[-1] * ATR(data_feed, 14)
