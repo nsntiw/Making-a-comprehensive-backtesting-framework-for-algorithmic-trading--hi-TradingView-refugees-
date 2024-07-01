@@ -29,9 +29,9 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
     C_GP = (np.prod(1 + total[total['Return'] > 0]['Return']) - 1) * 100
     L_GP = (np.prod(1 + long[long['Return'] > 0]['Return']) - 1) * 100
     S_GP = (np.prod(1 + short[short['Return'] > 0]['Return']) - 1) * 100
-    C_GL = (1 - np.prod(1 + total[total['Return'] < 0]['Return'])) * 100
-    L_GL = (1 - np.prod(1 + long[long['Return'] < 0]['Return'])) * 100
-    S_GL = (1 - np.prod(1 + short[short['Return'] < 0]['Return'])) * 100
+    C_GL = (np.prod(1 + -total[total['Return'] < 0]['Return']) - 1) * 100
+    L_GL = (np.prod(1 + -long[long['Return'] < 0]['Return']) - 1) * 100
+    S_GL = (np.prod(1 + -short[short['Return'] < 0]['Return']) - 1) * 100
     C_NWT = (total['Return'] > 0).sum()
     L_NWT = (long['Return'] > 0).sum()
     S_NWT = (short['Return'] > 0).sum()
