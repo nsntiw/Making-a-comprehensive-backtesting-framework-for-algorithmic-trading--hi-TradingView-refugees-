@@ -78,22 +78,10 @@ Plotting_Printing.equity_curve(stock_data[0], cumulative_non_nan, long_non_nan, 
 #--------------------------------------
 #Plotting 1D histogram
 data = total_return['Return'].dropna() * 100
-
-#Plotting_Printing.hist1d_base(data)
 Plotting_Printing.hist1d_stdev_mu(data, 2)
 
-if enable_long and enable_short:
-    long_non_nan['Length'] = (long_non_nan['Date2'] - long_non_nan['Date1']).dt.days
-    short_non_nan['Length'] = (short_non_nan['Date2'] - short_non_nan['Date1']).dt.days
-    data1 = pd.concat([long_non_nan[['Length']], short_non_nan[['Length']]])
-if enable_long:
-    long_non_nan['Length'] = (long_non_nan['Date2'] - long_non_nan['Date1']).dt.days
-    data1 = long_non_nan['Length']
-if enable_short:
-    short_non_nan['Length'] = (short_non_nan['Date2'] - short_non_nan['Date1']).dt.days
-    data1 = short_non_nan['Length']
-
-#Plotting_Printing.hist2d_base(data, data1, 2)
+#Plotting 2D histogram, returns and length in bars
+Plotting_Printing.hist2d_base(data, cumulative_non_nan['Length'], 2)
 
 #--------------------------------------
 #Montecarlo simulation

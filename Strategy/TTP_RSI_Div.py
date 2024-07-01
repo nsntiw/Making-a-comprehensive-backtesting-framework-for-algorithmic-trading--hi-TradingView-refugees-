@@ -4,6 +4,7 @@
 #GOOGL setting  8, close, 3 , 1  profitLevel at 80 shows win rate  86.57 %  profit factor 18.96 
 #SPY setting    5, close , 3, 3  profitLevel at 70  , shows win rate 80.34%  profit factor 2.348
 
+#implement trailing stop loss
 from ta.momentum import RSIIndicator
 from Strategy.Library import ATR, EMA
 

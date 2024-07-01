@@ -15,7 +15,7 @@ def get_stock_data(stock_name, starting_date, ending_date, interval):
     try:
         stock_data = pd.read_csv(name, index_col='Date', parse_dates=True)
         #Filter the data within the date range
-        if starting_date in stock_data.index and ending_date in stock_data.index:
+        if stock_data.index[0] <= pd.to_datetime(starting_date) and stock_data.index[-1] >= pd.to_datetime(ending_date):
             stock_data = stock_data[starting_date:ending_date]
             print("Read")
             return stock_data
