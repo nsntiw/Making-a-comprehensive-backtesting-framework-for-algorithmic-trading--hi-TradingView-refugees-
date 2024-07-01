@@ -14,9 +14,12 @@ def get_stock_data(stock_name, starting_date, ending_date, interval):
     name = os.path.join(stock_data_path, f'{stock_name}.csv')
     try:
         stock_data = pd.read_csv(name, index_col='Date', parse_dates=True)
-        stock_data = stock_data[starting_date:ending_date]
-        print("Read")
-        return stock_data
+        #Filter the data within the date range
+        if starting_date in stock_data.index and ending_date in stock_data.index:
+            stock_data = stock_data[starting_date:ending_date]
+            print("Read")
+            return stock_data
+        raise Exception #Proceed to except block if dates not found
     except:
         stock_data = yf.download(stock_name, starting_date, ending_date, interval = interval)
         stock_data.to_csv(path_or_buf = name)

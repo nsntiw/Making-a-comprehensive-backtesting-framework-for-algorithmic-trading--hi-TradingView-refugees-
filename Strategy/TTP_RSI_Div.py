@@ -31,8 +31,9 @@ def find_pivot_high(data_feed, left_lookback, right_lookback):
             return pivot_indexes
     return pivot_indexes
 
-def in_range(pivots):
-    return pivots[0] - pivots[1] >= 5
+def in_range(pivots, min_lookback, max_lookback):
+    bars = pivots[0] - pivots[1]
+    return bars >= 5 and bars <= 60
 
 
 def RSI_Div_Long(data_feed):
@@ -42,8 +43,8 @@ def RSI_Div_Long(data_feed):
     pivot_lookback_l = 1
     rsi_TP = 80
 
-    #maxLookback = 60
-    minLookback = 0
+    max_lookback = 60
+    min_lookback = 5
     
     #Calculate RSI
     rsi = calculate_rsi(data_feed['Close'].tail(30), rsi_length)
@@ -55,21 +56,21 @@ def RSI_Div_Long(data_feed):
     #Regular bullish
     rsiHL = rsi.iloc[-pivot_lookback_r] > rsi.iloc[pivot_low[1]]
     priceLL = data_feed['Low'].iloc[-pivot_lookback_r] < data_feed['Low'].iloc[pivot_low[1]]
-    bullCond = priceLL and rsiHL and pivot_low[0] == -pivot_lookback_r - 2 and in_range(pivot_low)
+    bullCond = priceLL and rsiHL and pivot_low[0] == -pivot_lookback_r - 2 and in_range(pivot_low, min_lookback, max_lookback)
     #Hidden bullish
     rsiHL = rsi.iloc[-pivot_lookback_r] < rsi.iloc[pivot_low[1]]
     priceLL = data_feed['Low'].iloc[-pivot_lookback_r] > data_feed['Low'].iloc[pivot_low[1]]
-    hiddenBullCond = rsiHL and priceLL and pivot_low[0] == -pivot_lookback_r - 2 and in_range(pivot_low)
+    hiddenBullCond = rsiHL and priceLL and pivot_low[0] == -pivot_lookback_r - 2 and in_range(pivot_low, min_lookback, max_lookback)
 
     #Regular breaish
     rsiLH = rsi.iloc[-pivot_lookback_r] < rsi.iloc[pivot_high[1]]
     priceHH = data_feed['High'].iloc[-pivot_lookback_r] > data_feed['High'].iloc[pivot_high[1]]
-    bearCond = rsiLH and priceHH and pivot_high[0] == -pivot_lookback_r - 2 and in_range(pivot_low)
+    bearCond = rsiLH and priceHH and pivot_high[0] == -pivot_lookback_r - 2 and in_range(pivot_high, min_lookback, max_lookback)
 
     #Hidden bearish
     rsiHH = rsi.iloc[-pivot_lookback_r] > rsi.iloc[pivot_high[1]]
     priceLH = data_feed['High'].iloc[-pivot_lookback_r] < data_feed['High'].iloc[pivot_high[1]]
-    hiddenBearCond = rsiHH and priceLH and pivot_high[0] == -pivot_lookback_r - 2 and in_range(pivot_low)
+    hiddenBearCond = rsiHH and priceLH and pivot_high[0] == -pivot_lookback_r - 2 and in_range(pivot_high, min_lookback, max_lookback)
 
 
     #stop loss

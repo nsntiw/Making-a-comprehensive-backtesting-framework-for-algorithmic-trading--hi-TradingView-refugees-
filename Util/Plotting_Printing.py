@@ -26,12 +26,12 @@ def print_df(df):
     print(tabulate(formatted_df, headers = df.columns.tolist(), tablefmt="github", numalign="right", stralign="right"))
 
 def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No longer passing in cumulative, long, short with slice indexing to get rid of initial trade
-    C_GP = total[total['Return'] > 0]['Return'].sum() * 100
-    L_GP = long[long['Return'] > 0]['Return'].sum() * 100
-    S_GP = short[short['Return'] > 0]['Return'].sum() * 100
-    C_GL = total[total['Return'] < 0]['Return'].sum() * 100
-    L_GL = long[long['Return'] < 0]['Return'].sum() * 100
-    S_GL = short[short['Return'] < 0]['Return'].sum() * 100
+    C_GP = (np.prod(1 + total[total['Return'] > 0]['Return']) - 1) * 100
+    L_GP = (np.prod(1 + long[long['Return'] > 0]['Return']) - 1) * 100
+    S_GP = (np.prod(1 + short[short['Return'] > 0]['Return']) - 1) * 100
+    C_GL = (1 - np.prod(1 + total[total['Return'] < 0]['Return'])) * 100
+    L_GL = (1 - np.prod(1 + long[long['Return'] < 0]['Return'])) * 100
+    S_GL = (1 - np.prod(1 + short[short['Return'] < 0]['Return'])) * 100
     C_NWT = (total['Return'] > 0).sum()
     L_NWT = (long['Return'] > 0).sum()
     S_NWT = (short['Return'] > 0).sum()

@@ -13,7 +13,7 @@ import Util.MonteCarlo as MonteCarlo
 #Download or read downloaded stock data csv files
 stock_input = []
 #Interval: [1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo]
-stock_input.append({'name': 'SPY', 'starting_date': '2001-12-30', 'ending_date': '2021-03-18', 'interval': '1d'})
+stock_input.append({'name': 'SPY', 'starting_date': '2005-02-27', 'ending_date': '2024-06-24', 'interval': '1d'})
 #stock_input.append({'name': 'EURJPY=X', 'starting_date': '2002-07-01', 'ending_date': '2024-02-05', 'interval': '1d'})
 
 print('-' * term_size.columns)
