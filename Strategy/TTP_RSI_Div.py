@@ -6,38 +6,17 @@
 
 #implement trailing stop loss
 from ta.momentum import RSIIndicator
-from Strategy.Library import ATR, EMA
+from Strategy.Library import ATR, EMA, find_pivot_low, find_pivot_high
 
 def calculate_rsi(close_prices, period):
     rsi_indicator = RSIIndicator(close=close_prices, window=period)
     return rsi_indicator.rsi()
 
-def find_pivot_low(data_feed, left_lookback, right_lookback):
-    pivot_indexes = []
-    
-    for i in range(-right_lookback - 2 , -len(data_feed) - 1, -1):
-        if data_feed.iloc[i] == min(data_feed.iloc[i - left_lookback : i + right_lookback + 1]):
-            pivot_indexes.append(i)
-        if len(pivot_indexes) == 2: #temp for this strategy, remove later
-            return pivot_indexes
-    return pivot_indexes
-
-def find_pivot_high(data_feed, left_lookback, right_lookback):
-    pivot_indexes = []
-    
-    for i in range(-right_lookback - 2, -len(data_feed) - 1, -1):
-        if data_feed.iloc[i] == max(data_feed.iloc[i - left_lookback : i + right_lookback + 1]):
-            pivot_indexes.append(i)
-        if len(pivot_indexes) == 2:
-            return pivot_indexes
-    return pivot_indexes
-
 def in_range(pivots, min_lookback, max_lookback):
     bars = pivots[0] - pivots[1]
     return bars >= 5 and bars <= 60
 
-
-def RSI_Div_Long(data_feed):
+def RSI_div_long(data_feed):
     #Parameters
     rsi_length = 9
     pivot_lookback_r = 3
@@ -49,8 +28,8 @@ def RSI_Div_Long(data_feed):
     
     #Calculate RSI
     rsi = calculate_rsi(data_feed['Close'].tail(30), rsi_length)
-    pivot_low = find_pivot_low(rsi, pivot_lookback_l, pivot_lookback_r)
-    pivot_high = find_pivot_high(rsi, pivot_lookback_l, pivot_lookback_r)
+    pivot_low = find_pivot_low(rsi, pivot_lookback_l, pivot_lookback_r, 2)
+    pivot_high = find_pivot_high(rsi, pivot_lookback_l, pivot_lookback_r, 2)
     
     if len(pivot_low) < 2 or len(pivot_high) < 2:
         return 0, 0, 0
@@ -83,5 +62,5 @@ def RSI_Div_Long(data_feed):
         return -1, 0, 0
     return 0, 0, 0
 
-def RSI_Div_Short(data_feed):
+def RSI_div_short(data_feed):
     return 0, 0, 0

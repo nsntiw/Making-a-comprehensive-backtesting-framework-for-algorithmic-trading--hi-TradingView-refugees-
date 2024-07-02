@@ -13,8 +13,8 @@ import Util.MonteCarlo as MonteCarlo
 #Download or read downloaded stock data csv files
 stock_input = []
 #Interval: [1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo]
-stock_input.append({'name': 'SPY', 'starting_date': '2005-02-27', 'ending_date': '2024-06-24', 'interval': '1d'})
-#stock_input.append({'name': 'EURJPY=X', 'starting_date': '2002-07-01', 'ending_date': '2024-02-05', 'interval': '1d'})
+stock_input.append({'name': 'SPY', 'starting_date': '2005-03-01', 'ending_date': '2024-06-24', 'interval': '1d'})
+#stock_input.append({'name': 'EURJPY=X', 'starting_date': '2003-01-25', 'ending_date': '2024-02-05', 'interval': '1d'})
 
 print('-' * term_size.columns)
 stock_data = [IO_handler.get_stock_data(e['name'], e['starting_date'], e['ending_date'], e['interval']) for e in stock_input]
@@ -47,8 +47,8 @@ strategy_long, strategy_short = [], []
 #from Strategy.QuantStratTradeR_GARCH import GARCH_long
 #strategy_long.append(GARCH_long), strategy_short.append(GARCH_long)
 
-from Strategy.TTP_RSI_Div import RSI_Div_Long, RSI_Div_Short
-strategy_long.append(RSI_Div_Long), strategy_short.append(RSI_Div_Short)
+from Strategy.TTP_IFTRSI import IFTRSI_long, IFTRSI_short
+strategy_long.append(IFTRSI_long), strategy_short.append(IFTRSI_short)
 #--------------------------------------
 #Generate trades
 print('-' * term_size.columns)
