@@ -12,7 +12,7 @@ def DualSMA_long(data_feed):
     long_ma = SMA(data_feed['Close'], long_ma_length)
     rsi = RSI(data_feed['Close'], 3)
 
-    #Return strategy signal
+    #Return strategy signal, stoploss 5%, takeprofit 20%
     if close > long_ma and close < short_ma and rsi < 30:
         return 1, (1-0.01*SL_rate) * close, (1+0.01*TP_rate) * close
     if close > short_ma and close < data_feed['Low'].iloc[-2]:
