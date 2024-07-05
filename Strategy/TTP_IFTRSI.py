@@ -4,7 +4,7 @@
 #https://youtu.be/yv-6xM-qcNU?si=JpBeym1w2o_tO_TR
 #https://www.tradingview.com/script/Nw4PDAwY-Inverse-Fisher-Transform-on-RSI-for-backtest-w-alerts/
 
-from Strategy.Library import inverse_fisher_transform, TTP_volatility_filter
+from Strategy.Library import inverse_fisher_transform, TTP_volatility_filter, SMA
 from ta.momentum import RSIIndicator
 from ta.trend import CCIIndicator
 from ta.volume import MFIIndicator
@@ -75,11 +75,11 @@ def IFTRSI_long(data_feed):
     sell_cond = signal.iloc[-1] < overbought and signal.iloc[-2] >= overbought if sell_on_reversal else signal.iloc[-1] > overbought
 
     if buy_cond:
-        return 1, 0, 0
+        return 1, False, False
     if sell_cond:
-        return -1, 0, 0
+        return -1, False, False
     else:
-        return 0, 0, 0
+        return 0, False, False
 
 def IFTRSI_short(data_feed):
     return 0, 0, 0

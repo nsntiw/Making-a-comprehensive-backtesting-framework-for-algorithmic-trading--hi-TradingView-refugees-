@@ -10,21 +10,21 @@ def check_exit(asset, close, signal, e, is_long):
     if asset != e['Asset']:
         return False
     if is_long:
-        if e['SL'] == 0 and e['TP'] == 0:
+        if not e['SL'] and not e['TP']:
             return signal == -1
-        if e['SL'] == 0:
-            return (signal == -1 or e['TP'] <= close)
-        if e['TP'] == 0:
-            return (signal == -1 or e['SL'] >= close)
+        if not e['SL']:
+            return signal == -1 or e['TP'] <= close
+        if not e['TP']:
+            return signal == -1 or e['SL'] >= close
         return signal == -1 or e['TP'] <= close or e['SL'] >= close
     else:
-        if e['SL'] == 0 and e['TP'] == 0:
+        if not e['SL'] and not e['TP']:
             return signal == -1
-        if e['SL'] == 0:
-            return (signal == -1 or e['TP'] >= close)
-        if e['TP'] == 0:
-            return (signal == -1 or e['SL'] <= close)
-        return (signal == -1 or e['TP'] >= close or e['SL'] <= close)
+        if not e['SL']:
+            return signal == -1 or e['TP'] >= close
+        if not e['TP']:
+            return signal == -1 or e['SL'] <= close
+        return signal == -1 or e['TP'] >= close or e['SL'] <= close
 def exit_trades(asset, data_feed, close, signal, open_trades, is_long):
     exited_trades = []
     for e in list(open_trades):

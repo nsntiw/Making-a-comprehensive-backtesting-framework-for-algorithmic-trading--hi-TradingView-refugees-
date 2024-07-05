@@ -6,7 +6,7 @@
 
 #implement trailing stop loss
 from ta.momentum import RSIIndicator
-from Strategy.Library import ATR, EMA, find_pivot_low, find_pivot_high
+from Strategy.Library import ATR, EMA, find_pivot_low, find_pivot_high, SMA
 
 def calculate_rsi(close_prices, period):
     rsi_indicator = RSIIndicator(close=close_prices, window=period)
@@ -56,11 +56,11 @@ def RSI_div_long(data_feed):
     #stop loss
     #SL = data_feed['Close'].iloc[-1] * ATR(data_feed, 14)
     # and data_feed['Close'].iloc[-1] > EMA(data_feed['Close'], 50)
-    if (bullCond or hiddenBullCond):
-        return 1, 0, 0
+    if (bullCond or hiddenBullCond) and data_feed['Close'].iloc[-1] > SMA(data_feed['Close'], 200):
+        return 1, False, data_feed['Close'].iloc[-1] * 2
     if rsi.iloc[-1] > rsi_TP or bearCond:
-        return -1, 0, 0
-    return 0, 0, 0
+        return -1, False, False
+    return 0, False, False
 
 def RSI_div_short(data_feed):
     return 0, 0, 0

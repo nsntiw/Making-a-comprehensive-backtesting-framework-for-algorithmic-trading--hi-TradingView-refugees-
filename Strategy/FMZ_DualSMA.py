@@ -15,7 +15,7 @@ def DualSMA_long(data_feed):
     #Return strategy signal
     if close > long_ma and close < short_ma and rsi < 30:
         return 1, (1-0.01*SL_rate) * close, (1+0.01*TP_rate) * close
-    if close>short_ma and close < data_feed['Low'].iloc[-2]:
+    if close > short_ma and close < data_feed['Low'].iloc[-2]:
         return -1, 0, 0
     return 0, 0, 0
     
