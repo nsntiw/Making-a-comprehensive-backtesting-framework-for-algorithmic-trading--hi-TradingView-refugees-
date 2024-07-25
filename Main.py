@@ -49,10 +49,12 @@ strategy_long, strategy_short = [], []
 
 #from Strategy.TTP_IFTRSI import IFTRSI_long, IFTRSI_short
 #strategy_long.append(IFTRSI_long), strategy_short.append(IFTRSI_short)
-from Strategy.TTP_RSI_Div import RSI_div_long, RSI_div_short
-strategy_long.append(RSI_div_long), strategy_short.append(RSI_div_short)
+#from Strategy.mohanee_RSI_Div import RSI_div_long, RSI_div_short
+#strategy_long.append(RSI_div_long), strategy_short.append(RSI_div_short)
 #from Strategy.FMZ_DualMACrossover_Quatntitative import MAQuantitative_long
 #strategy_long.append(MAQuantitative_long), strategy_short.append(MAQuantitative_long)
+from Strategy.mohanee_RSI2 import RSI_long
+strategy_long.append(RSI_long), strategy_short.append(RSI_long)
 #--------------------------------------
 #Generate trades
 print('-' * term_size.columns)

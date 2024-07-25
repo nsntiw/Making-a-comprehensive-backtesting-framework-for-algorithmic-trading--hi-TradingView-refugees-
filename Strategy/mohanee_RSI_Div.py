@@ -27,7 +27,7 @@ def RSI_div_long(data_feed):
     min_lookback = 5
     
     #Calculate RSI
-    rsi = calculate_rsi(data_feed['Close'].tail(30), rsi_length)
+    rsi = calculate_rsi(data_feed['High'].tail(30), rsi_length)
     pivot_low = find_pivot_low(rsi, pivot_lookback_l, pivot_lookback_r, 2)
     pivot_high = find_pivot_high(rsi, pivot_lookback_l, pivot_lookback_r, 2)
     
