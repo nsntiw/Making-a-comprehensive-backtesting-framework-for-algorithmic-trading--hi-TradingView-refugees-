@@ -14,7 +14,9 @@ import Util.MonteCarlo as MonteCarlo
 stock_input = []
 #Interval: [1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo]
 #stock_input.append({'name': 'SPY', 'starting_date': '2000-01-01', 'ending_date': '2024-06-24', 'interval': '1d'})
-stock_input.append({'name': 'EURJPY=X', 'starting_date': '2003-01-25', 'ending_date': '2024-02-05', 'interval': '1d'})
+#stock_input.append({'name': 'EURJPY=X', 'starting_date': '2003-01-25', 'ending_date': '2024-02-05', 'interval': '1d'})
+#stock_input.append({'name': 'EURJPY=X', 'starting_date': '2023-08-25', 'ending_date': '2024-02-05', 'interval': '1h'})
+stock_input.append({'name': 'SVXY', 'starting_date': '2023-08-25', 'ending_date': '2024-07-05', 'interval': '1h'})
 
 print('-' * term_size.columns)
 stock_data = [IO_handler.get_stock_data(e['name'], e['starting_date'], e['ending_date'], e['interval']) for e in stock_input]
@@ -23,7 +25,7 @@ stock_data = [IO_handler.get_stock_data(e['name'], e['starting_date'], e['ending
 #specifying backtesting parameters
 fee = 0.0005 #implement
 enable_long, enable_short = True, False
-pyramiding_num_trades = 0
+pyramiding = 5
 
 #--------------------------------------
 def calc_returns(stock_data):
@@ -53,15 +55,18 @@ strategy_long, strategy_short = [], []
 #strategy_long.append(RSI_div_long), strategy_short.append(RSI_div_short)
 #from Strategy.FMZ_DualMACrossover_Quatntitative import MAQuantitative_long
 #strategy_long.append(MAQuantitative_long), strategy_short.append(MAQuantitative_long)
-from Strategy.mohanee_RSI2 import RSI_long
-strategy_long.append(RSI_long), strategy_short.append(RSI_long)
+#from Strategy.mohanee_RSI2 import RSI_long
+#strategy_long.append(RSI_long), strategy_short.append(RSI_long)
+
+from Strategy.TsangYonJun_Mean_Reversion_w_Bollinger_Bands import MeanReversionLong, MeanReversionShort
+strategy_long.append(MeanReversionLong), strategy_short.append(MeanReversionShort)
 #--------------------------------------
 #Generate trades
 print('-' * term_size.columns)
 print(f'Backtesting on: {[e['name'] for e in stock_input]}')
 print(f'Long: {enable_long}, Strategies: {[e.__name__ for e in strategy_long]}')
 print(f'Short: {enable_short}, Strategies: {[e.__name__ for e in strategy_short]}')
-long_trades, short_trades, total_return = Backtesting.generate_trades(stock_data, strategy_long, strategy_short, enable_long, enable_short)
+long_trades, short_trades, total_return = Backtesting.generate_trades(stock_data, strategy_long, strategy_short, enable_long, enable_short, pyramiding)
 
 #Print trades list
 print('-' * term_size.columns)

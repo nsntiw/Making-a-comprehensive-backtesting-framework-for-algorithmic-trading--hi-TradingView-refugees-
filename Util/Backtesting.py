@@ -46,10 +46,10 @@ def exit_trades(asset, data_feed, close, signal, open_trades, is_long):
             })
     return exited_trades
 
-def check_entry(signal, open_long, open_short, is_long):
+def check_entry(signal, pyramiding, open_long, open_short, is_long):
     if is_long:
-        return signal == 1 and len(open_long) + len(open_short) == 0
-    return signal == 1 and len(open_short) + len(open_long) == 0
+        return signal == 1 and len(open_long) < pyramiding and len(open_short) == 0
+    return signal == 1 and len(open_short) < pyramiding and len(open_long) == 0
 def enter_trades(asset, date, close, take_profit, stop_loss, open_long, open_short, is_long):
     if is_long:
         open_long.append({'Asset': asset,
@@ -89,7 +89,7 @@ def calc_drawdown(data_feed, entry_date, entry_price, is_long):
         high = data_feed.loc[entry_date:, 'High'].max()
         return (high - entry_price) / entry_price
 
-def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, enable_short):
+def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, enable_short, pyramiding):
     #Entry Date, Exit Date, Entry Price, Exit Price, Return, Cumulative Return, Run-up, Drawdown
     long_trades = pd.DataFrame(columns=['Asset', 'Date1', 'P1', 'TP', 'SL', 'Date2', 'P2', 'Return', 'Run-up', 'Drawdown', 'Length'])
     short_trades = pd.DataFrame(columns=['Asset', 'Date1', 'P1', 'TP', 'SL', 'Date2', 'P2', 'Return', 'Run-up', 'Drawdown', 'Length'])
@@ -110,7 +110,7 @@ def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, e
                 if not temp.empty:
                     long_trades = pd.concat([long_trades, temp], ignore_index=True)
                 #enter trade
-                if check_entry(signal, open_long, open_short, True):
+                if check_entry(signal, pyramiding, open_long, open_short, True):
                     enter_trades(asset, data_feed.index[-1], close, take_profit, stop_loss, open_long, open_short, True)
             if enable_short:
                 signal, take_profit, stop_loss = strategy_short(data_feed)
@@ -122,7 +122,7 @@ def generate_trades(stock_data1, strategy_long1, strategy_short1, enable_long, e
                 if not temp.empty:
                     short_trades = pd.concat([short_trades, temp], ignore_index=True)
                 #enter trade
-                if check_entry(signal, open_long, open_short, False):
+                if check_entry(signal, pyramiding, open_long, open_short, False):
                     enter_trades(asset, data_feed.index[-1], close, take_profit, stop_loss, open_long, open_short, False)
 
     #--------------------------------------

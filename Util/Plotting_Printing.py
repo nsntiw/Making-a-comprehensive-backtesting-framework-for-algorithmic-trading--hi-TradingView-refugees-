@@ -44,7 +44,7 @@ def print_TV_stats(stock, total, long, short, enable_long, enable_short): #No lo
     C_AT,L_AT,S_AT = 0, 0, 0
     L_ANBIT, L_ANBIWT, L_ANBILT = 0, 0, 0
     S_ANBIT, S_ANBIWT, S_ANBILT = 0, 0, 0
-    C_ANBIT, C_ANBIWT, S_ANBILT = 0, 0, 0
+    C_ANBIT, C_ANBIWT, C_ANBILT = 0, 0, 0
     if enable_long:
         L_NP = (long['Total Return'].dropna().iloc[-1] - 1) * 100
         L_PF = L_GP / abs(L_GL)
